@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RETRO COMPUTER - Ultimate Vintage OS Experience</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --pink: #ff71ce;
+            --blue: #01cdfe;
+            --purple: #b967ff;
+            --cyan: #05ffa1;
+            --yellow: #fffb96;
+            --gray: #c0c0c0;
+            --dark-gray: #808080;
+            --win95-blue: #000080;
+            --win95-teal: #008080;
+        }
+
+        body {
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            font-family: 'Chicago', 'MS Sans Serif', 'Courier New', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+        }
+
+        /* ========== BOOT SCREEN ========== */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50000;
+            transition: opacity 1s;
+        }
+
+        #boot-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .boot-logo {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 32px;
+            color: var(--cyan);
+            margin-bottom: 40px;
+            animation: bootGlow 2s infinite;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes bootGlow {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--cyan), 0 0 20px var(--pink), 0 0 30px var(--purple);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--purple), 0 0 40px var(--blue), 0 0 60px var(--cyan);
+            }
+        }
+
+        .boot-progress {
+            width: 400px;
+            max-width: 80vw;
+            height: 30px;
+            background: #111;
+            border: 3px solid var(--cyan);
+            padding: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boot-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue), var(--cyan));
+            width: 0%;
+            animation: bootProgress 3s forwards;
+        }
+
+        @keyframes bootProgress {
+            to { width: 100%; }
+        }
+
+        .boot-text {
+            margin-top: 20px;
+            color: var(--yellow);
+            font-size: 12px;
+            font-family: 'Press Start 2P', monospace;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* ========== MODE SELECTOR ========== */
+        #mode-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 40000;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #mode-selector.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .mode-container {
+            display: flex;
+            gap: 50px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .mode-option {
+            width: 300px;
+            height: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 30px var(--pink);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-option:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 50px var(--cyan);
+        }
+
+        .mode-option h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--win95-blue);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .mode-preview {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border: 2px solid #000;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .mode-description {
+            text-align: center;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* ========== MAC CLASSIC THEME ========== */
+        .mac-theme {
+            background: #c0c0c0;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVQIW2NkYGD4z8DAwMgABAABDgEBKkV3mQAAAABJRU5ErkJggg==');
+        }
+
+        .mac-theme .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .mac-theme .menu-item {
+            padding: 2px 10px;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .mac-theme .menu-item:hover,
+        .mac-theme .menu-item.active {
+            background: #000;
+            color: #fff;
+        }
+
+        /* ========== VAPORWAVE 95 THEME ========== */
+        .vapor-theme {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            position: relative;
+        }
+
+        .vapor-theme::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('vaporwave-640x360.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.8;
+        }
+
+        /* CRT Effect */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: scanlines 0.1s linear infinite;
+            display: none;
+        }
+
+        .vapor-theme .crt-overlay {
+            display: block;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(2px); }
+        }
+
+        /* ========== DESKTOP ========== */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #desktop.active {
+            display: block;
+        }
+
+        .desktop-icons {
+            position: absolute;
+            top: 30px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .vapor-theme .desktop-icons {
+            top: 50px;
+            flex-direction: column;
+            flex-wrap: wrap;
+            max-height: calc(100vh - 100px);
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .vapor-theme .desktop-icon:hover {
+            background: rgba(0, 0, 128, 0.3);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .desktop-icon.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 5px;
+            background: #fff;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            overflow: hidden;
+        }
+
+        .vapor-theme .icon-image {
+            background: transparent;
+            border: none;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .icon-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .icon-label {
+            font-size: 10px;
+            word-wrap: break-word;
+            color: #000;
+        }
+
+        .vapor-theme .icon-label {
+            color: white;
+            text-shadow: 1px 1px 2px black, 0 0 10px var(--pink);
+        }
+
+        /* ========== WINDOWS ========== */
+        .window {
+            position: absolute;
+            background: #fff;
+            border: 2px solid #000;
+            min-width: 200px;
+            min-height: 150px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+        }
+
+        .vapor-theme .window {
+            border: 2px solid;
+            border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255, 113, 206, 0.3);
+            background: var(--gray);
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window.focused {
+            z-index: 1000;
+        }
+
+        .window-titlebar {
+            background: #fff;
+            border-bottom: 1px solid #000;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            position: relative;
+            touch-action: none;
+            padding: 0 3px;
+        }
+
+        .vapor-theme .window-titlebar {
+            background: linear-gradient(90deg, var(--win95-blue), var(--blue));
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            height: auto;
+            padding: 3px;
+        }
+
+        .window.focused .window-titlebar {
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 1px,
+                #fff 1px,
+                #fff 2px
+            );
+        }
+
+        .vapor-theme .window.focused .window-titlebar {
+            background: linear-gradient(90deg, var(--win95-blue), var(--blue));
+        }
+
+        .window-close {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            cursor: pointer;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .window-close:hover {
+            background: #000;
+        }
+
+        .vapor-theme .window-close {
+            width: 18px;
+            height: 18px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .vapor-theme .window-close::after {
+            content: '×';
+        }
+
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            background: #fff;
+            padding: 10px;
+        }
+
+        .vapor-theme .window-content {
+            background: var(--gray);
+        }
+
+        /* ========== TASKBAR / MENU BAR ========== */
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            display: none;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .mac-theme .menu-bar {
+            display: flex;
+        }
+
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(180deg, #c0c0c0, #a0a0a0);
+            border-top: 2px solid #fff;
+            display: none;
+            align-items: center;
+            padding: 3px;
+            gap: 3px;
+            z-index: 10000;
+        }
+
+        .vapor-theme .taskbar {
+            display: flex;
+        }
+
+        .start-button {
+            padding: 3px 20px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .start-button::before {
+            content: '🌸';
+            font-size: 16px;
+        }
+
+        .taskbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            border: 2px inset;
+            height: 30px;
+            font-size: 11px;
+        }
+
+        .menu-clock {
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        /* ========== DROPDOWN MENU ========== */
+        .dropdown-menu {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            min-width: 150px;
+            display: none;
+            z-index: 10000;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 5px 20px 5px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 11px;
+        }
+
+        .dropdown-item:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* ========== GALLERY GRID ========== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery-item {
+            background: #000;
+            border: 3px solid var(--pink);
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-caption {
+            background: rgba(0,0,0,0.8);
+            color: var(--pink);
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* ========== MUSIC PLAYER ========== */
+        .music-player {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .player-button {
+            width: 40px;
+            height: 40px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-button:active {
+            border-color: #0a0a0a #fff #fff #0a0a0a;
+        }
+
+        .track-list {
+            background: #000;
+            border: 2px inset;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            padding: 8px;
+            cursor: pointer;
+            color: var(--yellow);
+            font-size: 11px;
+            border-bottom: 1px solid #333;
+        }
+
+        .track-item:hover {
+            background: var(--win95-blue);
+            color: var(--cyan);
+        }
+
+        .track-item.playing {
+            background: var(--purple);
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* ========== CALCULATOR ========== */
+        .calc-display {
+            background: #d0f0d0;
+            border: 2px inset #888;
+            padding: 10px;
+            text-align: right;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 5px;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 5px;
+        }
+
+        .calc-button {
+            background: #d0d0d0;
+            border: 2px outset #fff;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .calc-button:active {
+            border-style: inset;
+            background: #b0b0b0;
+        }
+
+        /* ========== VISUALIZER ========== */
+        .visualizer {
+            background: #000;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .visualizer canvas {
+            border: 2px solid var(--cyan);
+            box-shadow: 0 0 20px var(--purple);
+            max-width: 100%;
+        }
+
+        /* ========== MODAL/DIALOG ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: #d0d0d0;
+            border: 2px solid #000;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 90vw;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 32px;
+            margin-right: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-button {
+            background: #fff;
+            border: 2px outset #fff;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-button:active {
+            border-style: inset;
+        }
+
+        /* ========== FILE TREE ========== */
+        .file-tree {
+            background: #fff;
+            border: 2px inset;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .folder {
+            cursor: pointer;
+            padding: 2px;
+            user-select: none;
+        }
+
+        .folder:hover {
+            background: var(--win95-blue);
+            color: white;
+        }
+
+        .folder-content {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .folder.open > .folder-content {
+            display: block;
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #c0c0c0;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #808080;
+            border: 1px solid #000;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .boot-logo {
+                font-size: 20px;
+            }
+
+            .mode-option {
+                width: 250px;
+                height: 300px;
+            }
+
+            .desktop-icon {
+                width: 60px;
+            }
+
+            .icon-image {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+
+            .window {
+                max-width: 95vw !important;
+                max-height: 80vh !important;
+            }
+        }
+
+        /* ========== ANIMATIONS ========== */
+        @keyframes windowOpen {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .window.active {
+            animation: windowOpen 0.3s ease-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="boot-screen">
+        <div class="boot-logo">RETRO COMPUTER</div>
+        <div class="boot-progress">
+            <div class="boot-fill"></div>
+        </div>
+        <div class="boot-text">LOADING OS...</div>
+    </div>
+
+    <!-- CRT Overlay -->
+    <div class="crt-overlay"></div>
+
+    <!-- Mode Selector -->
+    <div id="mode-selector">
+        <div class="mode-container">
+            <div class="mode-option" onclick="selectMode('mac')">
+                <h2>MAC CLASSIC</h2>
+                <div class="mode-preview">💻</div>
+                <div class="mode-description">
+                    Experience the classic Macintosh interface from the 1980s-90s.
+                    Features monochrome design, Chicago font, and authentic system sounds.
+                </div>
+            </div>
+            <div class="mode-option" onclick="selectMode('vapor')">
+                <h2>VAPORWAVE 95</h2>
+                <div class="mode-preview">🌸</div>
+                <div class="mode-description">
+                    Enter the aesthetic vaporwave dimension with Windows 95 styling,
+                    neon colors, CRT effects, and dreamy synth sounds.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+        <!-- Menu Bar (Mac Classic) -->
+        <div class="menu-bar">
+            <div class="menu-item" data-menu="apple">
+                <span style="font-size: 16px;">🍎</span>
+                <div class="dropdown-menu" id="apple-menu">
+                    <div class="dropdown-item" onclick="showAbout()">About This Computer</div>
+                    <div class="dropdown-item" onclick="switchMode()">Switch Mode...</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="file">
+                File
+                <div class="dropdown-menu" id="file-menu">
+                    <div class="dropdown-item" onclick="closeActiveWindow()">Close Window</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="special">
+                Special
+                <div class="dropdown-menu" id="special-menu">
+                    <div class="dropdown-item" onclick="restart()">Restart</div>
+                    <div class="dropdown-item" onclick="shutdown()">Shut Down</div>
+                </div>
+            </div>
+            <div class="menu-clock" id="menu-clock">12:00 PM</div>
+        </div>
+
+        <!-- Taskbar (Vaporwave 95) -->
+        <div class="taskbar">
+            <div class="start-button" onclick="toggleStartMenu()">Vapor Start</div>
+            <div class="taskbar-right">
+                <span style="cursor: pointer;" onclick="openWindow('music-player')" title="Music">🎵</span>
+                <span style="cursor: pointer;" onclick="toggleSound()" title="Volume">🔊</span>
+                <span class="menu-clock" id="taskbar-clock">12:00 PM</span>
+            </div>
+        </div>
+
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" ondblclick="openWindow('my-computer')">
+                <div class="icon-image">
+                    <img src="Computer_95.webp" alt="Computer" onerror="this.parentElement.innerHTML='💾'">
+                </div>
+                <div class="icon-label">My Computer</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('gallery')">
+                <div class="icon-image">🖼️</div>
+                <div class="icon-label">Gallery</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('music-player')">
+                <div class="icon-image">🎵</div>
+                <div class="icon-label">Music Player</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('calculator')">
+                <div class="icon-image">🔢</div>
+                <div class="icon-label">Calculator</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('visualizer')">
+                <div class="icon-image">✨</div>
+                <div class="icon-label">Visualizer</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('sound-test')">
+                <div class="icon-image">🔊</div>
+                <div class="icon-label">Sound Test</div>
+            </div>
+        </div>
+
+        <!-- Windows -->
+        <!-- My Computer Window -->
+        <div class="window" id="my-computer" style="left: 100px; top: 100px; width: 500px; height: 400px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'my-computer')" ontouchstart="startDrag(event, 'my-computer')">
+                <div class="window-close" onclick="closeWindow('my-computer')"></div>
+                <div class="window-title">💾 My Computer</div>
+            </div>
+            <div class="window-content">
+                <div class="file-tree">
+                    <div class="folder" onclick="toggleFolder(this)">
+                        <span>📁 C:\RETRO\</span>
+                        <div class="folder-content">
+                            <div class="folder" onclick="toggleFolder(this)">
+                                <span>📁 SYSTEM\</span>
+                                <div class="folder-content">
+                                    <div>📄 config.sys</div>
+                                    <div>📄 autoexec.bat</div>
+                                    <div>📄 win.ini</div>
+                                </div>
+                            </div>
+                            <div class="folder" onclick="toggleFolder(this)">
+                                <span>📁 MUSIC\</span>
+                                <div class="folder-content">
+                                    <div onclick="playTrack(0)">🎵 vaporwave_dreams.mid</div>
+                                    <div onclick="playTrack(1)">🎵 synthwave_night.mid</div>
+                                    <div onclick="playTrack(2)">🎵 retro_beats.mid</div>
+                                </div>
+                            </div>
+                            <div class="folder" onclick="toggleFolder(this)">
+                                <span>📁 PICTURES\</span>
+                                <div class="folder-content">
+                                    <div>🖼️ sunset.bmp</div>
+                                    <div>🖼️ aesthetic.jpg</div>
+                                </div>
+                            </div>
+                            <div>📄 readme.txt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Window -->
+        <div class="window" id="gallery" style="left: 150px; top: 80px; width: 600px; height: 500px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'gallery')" ontouchstart="startDrag(event, 'gallery')">
+                <div class="window-close" onclick="closeWindow('gallery')"></div>
+                <div class="window-title">🎨 Gallery - Aesthetic Archive</div>
+            </div>
+            <div class="window-content">
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <img src="vaporwave-640x360.jpg" alt="Vaporwave" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'%3E%3Crect fill=\'%23ff71ce\' width=\'100\' height=\'100\'/%3E%3C/svg%3E'">
+                        <div class="gallery-caption">neon dreams</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="dolphins.gif" alt="Dolphins" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'%3E%3Crect fill=\'%2301cdfe\' width=\'100\' height=\'100\'/%3E%3C/svg%3E'">
+                        <div class="gallery-caption">digital ocean</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Computer_95.webp" alt="Computer" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'%3E%3Crect fill=\'%23b967ff\' width=\'100\' height=\'100\'/%3E%3C/svg%3E'">
+                        <div class="gallery-caption">retro tech</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="reality.jpg" alt="Reality" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'%3E%3Crect fill=\'%2305ffa1\' width=\'100\' height=\'100\'/%3E%3C/svg%3E'">
+                        <div class="gallery-caption">glitch reality</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Player Window -->
+        <div class="window" id="music-player" style="left: 200px; top: 120px; width: 450px; height: 500px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'music-player')" ontouchstart="startDrag(event, 'music-player')">
+                <div class="window-close" onclick="closeWindow('music-player')"></div>
+                <div class="window-title">🎵 Retro Music Player</div>
+            </div>
+            <div class="window-content">
+                <div class="music-player">
+                    <h3 style="margin-bottom: 15px;">♪ NOW PLAYING ♪</h3>
+                    <div id="now-playing" style="color: var(--pink); margin-bottom: 20px; font-weight: bold;">Select a track...</div>
+                    <div class="player-controls">
+                        <button class="player-button" onclick="musicControl('prev')" title="Previous">⏮</button>
+                        <button class="player-button" id="play-pause-btn" onclick="musicControl('play')" title="Play/Pause">▶</button>
+                        <button class="player-button" onclick="musicControl('stop')" title="Stop">⏹</button>
+                        <button class="player-button" onclick="musicControl('next')" title="Next">⏭</button>
+                    </div>
+                    <div class="track-list">
+                        <div class="track-item" onclick="selectTrack(0)">🎹 Vaporwave Dreams</div>
+                        <div class="track-item" onclick="selectTrack(1)">🎹 Synthwave Nights</div>
+                        <div class="track-item" onclick="selectTrack(2)">🎹 Retro Beats</div>
+                        <div class="track-item" onclick="selectTrack(3)">🎹 Digital Sunset</div>
+                        <div class="track-item" onclick="selectTrack(4)">🎹 Neon Mall</div>
+                        <div class="track-item" onclick="selectTrack(5)">🎹 80s Groove</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <label>Volume: <span id="volume-display">70</span>%</label>
+                        <input type="range" id="volume-slider" min="0" max="100" value="70" onchange="changeVolume(this.value)" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Window -->
+        <div class="window" id="calculator" style="left: 250px; top: 150px; width: 240px; height: 320px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'calculator')" ontouchstart="startDrag(event, 'calculator')">
+                <div class="window-close" onclick="closeWindow('calculator')"></div>
+                <div class="window-title">🔢 Calculator</div>
+            </div>
+            <div class="window-content" style="padding: 5px;">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-buttons">
+                    <button class="calc-button" onclick="calcInput('7')">7</button>
+                    <button class="calc-button" onclick="calcInput('8')">8</button>
+                    <button class="calc-button" onclick="calcInput('9')">9</button>
+                    <button class="calc-button" onclick="calcInput('÷')">÷</button>
+                    <button class="calc-button" onclick="calcInput('4')">4</button>
+                    <button class="calc-button" onclick="calcInput('5')">5</button>
+                    <button class="calc-button" onclick="calcInput('6')">6</button>
+                    <button class="calc-button" onclick="calcInput('×')">×</button>
+                    <button class="calc-button" onclick="calcInput('1')">1</button>
+                    <button class="calc-button" onclick="calcInput('2')">2</button>
+                    <button class="calc-button" onclick="calcInput('3')">3</button>
+                    <button class="calc-button" onclick="calcInput('-')">−</button>
+                    <button class="calc-button" onclick="calcInput('0')">0</button>
+                    <button class="calc-button" onclick="calcInput('.')">.</button>
+                    <button class="calc-button" onclick="calcEquals()">=</button>
+                    <button class="calc-button" onclick="calcInput('+')">+</button>
+                    <button class="calc-button" onclick="calcClear()" style="grid-column: span 4;">C</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizer Window -->
+        <div class="window" id="visualizer" style="left: 180px; top: 100px; width: 520px; height: 420px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'visualizer')" ontouchstart="startDrag(event, 'visualizer')">
+                <div class="window-close" onclick="closeWindow('visualizer')"></div>
+                <div class="window-title">✨ Audio Visualizer</div>
+            </div>
+            <div class="window-content">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <button class="modal-button" onclick="changeVisualizer('wave')">Wave</button>
+                    <button class="modal-button" onclick="changeVisualizer('bars')">Bars</button>
+                    <button class="modal-button" onclick="changeVisualizer('spiral')">Spiral</button>
+                </div>
+                <div class="visualizer">
+                    <canvas id="visualizer-canvas" width="460" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sound Test Window -->
+        <div class="window" id="sound-test" style="left: 220px; top: 140px; width: 400px; height: 400px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'sound-test')" ontouchstart="startDrag(event, 'sound-test')">
+                <div class="window-close" onclick="closeWindow('sound-test')"></div>
+                <div class="window-title">🔊 Sound Test</div>
+            </div>
+            <div class="window-content">
+                <div style="padding: 20px;">
+                    <h3 style="margin-bottom: 20px;">System Sounds</h3>
+                    <div style="display: grid; gap: 10px;">
+                        <button class="modal-button" onclick="playSound('startup')">🔔 Startup Chime</button>
+                        <button class="modal-button" onclick="playSound('click')">🖱️ Click</button>
+                        <button class="modal-button" onclick="playSound('open')">📂 Window Open</button>
+                        <button class="modal-button" onclick="playSound('close')">❌ Window Close</button>
+                        <button class="modal-button" onclick="playSound('beep')">⚠️ Alert Beep</button>
+                        <button class="modal-button" onclick="playSound('error')">🚫 Error</button>
+                        <button class="modal-button" onclick="playSound('success')">✅ Success</button>
+                        <button class="modal-button" onclick="playSound('notify')">🔔 Notification</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-icon" id="modal-icon">ℹ️</div>
+                <div id="modal-text">Message</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== AUDIO SYSTEM ==========
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let masterVolume = 0.7;
+        let soundEnabled = true;
+        let currentMode = 'vapor';
+
+        // Sound Effects Library
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'startup':
+                    playChordSequence([
+                        { freq: 523.25, time: 0, dur: 0.3 },
+                        { freq: 659.25, time: 0.15, dur: 0.3 },
+                        { freq: 783.99, time: 0.3, dur: 0.5 }
+                    ]);
+                    return;
+                case 'click':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.1 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.05);
+                    break;
+                case 'open':
+                    oscillator.frequency.value = 400;
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.2 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'close':
+                    oscillator.frequency.value = 800;
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.12);
+                    gainNode.gain.setValueAtTime(0.15 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.12);
+                    break;
+                case 'beep':
+                    oscillator.frequency.value = 1000;
+                    gainNode.gain.setValueAtTime(0.2 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'error':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.value = 200;
+                    gainNode.gain.setValueAtTime(0.3 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'success':
+                    playChordSequence([
+                        { freq: 523, time: 0, dur: 0.1 },
+                        { freq: 659, time: 0.1, dur: 0.1 },
+                        { freq: 784, time: 0.2, dur: 0.2 }
+                    ]);
+                    return;
+                case 'notify':
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.setValueAtTime(0.15 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.08);
+                    break;
+            }
+        }
+
+        function playChordSequence(notes) {
+            notes.forEach(note => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.frequency.value = note.freq;
+                gain.gain.setValueAtTime(0.2 * masterVolume, audioContext.currentTime + note.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.dur);
+
+                osc.start(audioContext.currentTime + note.time);
+                osc.stop(audioContext.currentTime + note.time + note.dur);
+            });
+        }
+
+        // Music Player System
+        let currentTrack = -1;
+        let isPlaying = false;
+        let musicInterval = null;
+
+        const melodies = [
+            // Vaporwave Dreams
+            [
+                { freq: 261.63, dur: 0.4 }, { freq: 329.63, dur: 0.4 },
+                { freq: 392.00, dur: 0.4 }, { freq: 523.25, dur: 0.6 }
+            ],
+            // Synthwave Nights
+            [
+                { freq: 440.00, dur: 0.3 }, { freq: 493.88, dur: 0.3 },
+                { freq: 523.25, dur: 0.3 }, { freq: 587.33, dur: 0.5 }
+            ],
+            // Retro Beats
+            [
+                { freq: 392.00, dur: 0.25 }, { freq: 440.00, dur: 0.25 },
+                { freq: 493.88, dur: 0.25 }, { freq: 523.25, dur: 0.4 }
+            ],
+            // Digital Sunset
+            [
+                { freq: 523.25, dur: 0.35 }, { freq: 493.88, dur: 0.35 },
+                { freq: 440.00, dur: 0.35 }, { freq: 392.00, dur: 0.5 }
+            ],
+            // Neon Mall
+            [
+                { freq: 659.25, dur: 0.3 }, { freq: 587.33, dur: 0.3 },
+                { freq: 523.25, dur: 0.3 }, { freq: 493.88, dur: 0.4 }
+            ],
+            // 80s Groove
+            [
+                { freq: 392.00, dur: 0.2 }, { freq: 440.00, dur: 0.2 },
+                { freq: 493.88, dur: 0.2 }, { freq: 587.33, dur: 0.3 }
+            ]
+        ];
+
+        const trackNames = [
+            'Vaporwave Dreams',
+            'Synthwave Nights',
+            'Retro Beats',
+            'Digital Sunset',
+            'Neon Mall',
+            '80s Groove'
+        ];
+
+        function playMelody() {
+            if (currentTrack < 0 || currentTrack >= melodies.length) return;
+
+            const melody = melodies[currentTrack];
+            let time = audioContext.currentTime;
+
+            melody.forEach(note => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+
+                osc.type = 'sine';
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+
+                filter.type = 'lowpass';
+                filter.frequency.value = 2000;
+
+                osc.frequency.value = note.freq;
+                gain.gain.setValueAtTime(0.2 * masterVolume, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + note.dur);
+
+                osc.start(time);
+                osc.stop(time + note.dur);
+
+                time += note.dur;
+            });
+        }
+
+        function selectTrack(index) {
+            document.querySelectorAll('.track-item').forEach((item, i) => {
+                item.classList.toggle('playing', i === index);
+            });
+            currentTrack = index;
+            document.getElementById('now-playing').textContent = trackNames[index];
+            playSound('click');
+        }
+
+        function musicControl(action) {
+            playSound('click');
+
+            switch(action) {
+                case 'play':
+                    if (currentTrack < 0) selectTrack(0);
+
+                    if (!isPlaying) {
+                        isPlaying = true;
+                        document.getElementById('play-pause-btn').textContent = '⏸';
+                        playMelody();
+                        musicInterval = setInterval(() => {
+                            if (isPlaying) playMelody();
+                        }, 2500);
+                    } else {
+                        isPlaying = false;
+                        document.getElementById('play-pause-btn').textContent = '▶';
+                        clearInterval(musicInterval);
+                    }
+                    break;
+                case 'stop':
+                    isPlaying = false;
+                    document.getElementById('play-pause-btn').textContent = '▶';
+                    clearInterval(musicInterval);
+                    break;
+                case 'next':
+                    if (currentTrack < trackNames.length - 1) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack + 1);
+                        if (wasPlaying) setTimeout(() => musicControl('play'), 100);
+                    }
+                    break;
+                case 'prev':
+                    if (currentTrack > 0) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack - 1);
+                        if (wasPlaying) setTimeout(() => musicControl('play'), 100);
+                    }
+                    break;
+            }
+        }
+
+        function changeVolume(value) {
+            masterVolume = value / 100;
+            document.getElementById('volume-display').textContent = value;
+            playSound('click');
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            playSound('click');
+            showAlert(soundEnabled ? '🔊 Sound ON' : '🔇 Sound OFF', 'ℹ️');
+        }
+
+        // ========== VISUALIZER ==========
+        const canvas = document.getElementById('visualizer-canvas');
+        const ctx = canvas.getContext('2d');
+        let visualizerType = 'wave';
+        let visualizerAnimationId;
+
+        function changeVisualizer(type) {
+            visualizerType = type;
+            playSound('click');
+            if (visualizerAnimationId) cancelAnimationFrame(visualizerAnimationId);
+            animateVisualizer();
+        }
+
+        function animateVisualizer() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const time = Date.now() * 0.001;
+
+            if (visualizerType === 'wave') {
+                ctx.strokeStyle = '#01cdfe';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = canvas.height / 2 + Math.sin(x * 0.02 + time * 2) * 50 * Math.sin(time);
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            } else if (visualizerType === 'bars') {
+                const barCount = 32;
+                const barWidth = canvas.width / barCount;
+                for (let i = 0; i < barCount; i++) {
+                    const height = Math.abs(Math.sin(time + i * 0.5)) * canvas.height * 0.8;
+                    const hue = (i / barCount * 360 + time * 50) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                    ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 2, height);
+                }
+            } else if (visualizerType === 'spiral') {
+                ctx.strokeStyle = '#ff71ce';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < 200; i++) {
+                    const angle = i * 0.1 + time;
+                    const radius = i * 0.5 + Math.sin(time * 2) * 20;
+                    const x = canvas.width / 2 + Math.cos(angle) * radius;
+                    const y = canvas.height / 2 + Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            visualizerAnimationId = requestAnimationFrame(animateVisualizer);
+        }
+
+        // ========== CALCULATOR ==========
+        let calcValue = '0';
+        let calcOperator = null;
+        let calcPrevValue = null;
+        let calcNewNumber = true;
+
+        function calcInput(value) {
+            playSound('click');
+
+            if (['+', '-', '×', '÷'].includes(value)) {
+                if (calcPrevValue !== null && !calcNewNumber) calcEquals();
+                calcOperator = value;
+                calcPrevValue = parseFloat(calcValue);
+                calcNewNumber = true;
+            } else if (value === '.') {
+                if (!calcValue.includes('.')) calcValue += '.';
+            } else {
+                if (calcNewNumber) {
+                    calcValue = value;
+                    calcNewNumber = false;
+                } else {
+                    calcValue = calcValue === '0' ? value : calcValue + value;
+                }
+            }
+
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        function calcEquals() {
+            playSound('click');
+
+            if (calcOperator && calcPrevValue !== null) {
+                const current = parseFloat(calcValue);
+                let result = 0;
+
+                switch(calcOperator) {
+                    case '+': result = calcPrevValue + current; break;
+                    case '-': result = calcPrevValue - current; break;
+                    case '×': result = calcPrevValue * current; break;
+                    case '÷': result = current !== 0 ? calcPrevValue / current : 0; break;
+                }
+
+                calcValue = result.toString();
+                document.getElementById('calc-display').textContent = calcValue;
+                calcOperator = null;
+                calcPrevValue = null;
+                calcNewNumber = true;
+            }
+        }
+
+        function calcClear() {
+            playSound('click');
+            calcValue = '0';
+            calcOperator = null;
+            calcPrevValue = null;
+            calcNewNumber = true;
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        // ========== WINDOW MANAGEMENT ==========
+        let zIndexCounter = 100;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openWindow(windowId) {
+            playSound('open');
+            const win = document.getElementById(windowId);
+            win.classList.add('active');
+            focusWindow(windowId);
+
+            if (windowId === 'visualizer') {
+                animateVisualizer();
+            }
+        }
+
+        function closeWindow(windowId) {
+            playSound('close');
+            document.getElementById(windowId).classList.remove('active', 'focused');
+
+            if (windowId === 'music-player' && isPlaying) {
+                musicControl('stop');
+            }
+
+            if (windowId === 'visualizer' && visualizerAnimationId) {
+                cancelAnimationFrame(visualizerAnimationId);
+            }
+        }
+
+        function closeActiveWindow() {
+            const activeWin = document.querySelector('.window.focused');
+            if (activeWin) closeWindow(activeWin.id);
+        }
+
+        function focusWindow(windowId) {
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('focused'));
+            const win = document.getElementById(windowId);
+            win.classList.add('focused');
+            win.style.zIndex = ++zIndexCounter;
+        }
+
+        document.querySelectorAll('.window').forEach(win => {
+            win.addEventListener('mousedown', () => focusWindow(win.id));
+            win.addEventListener('touchstart', () => focusWindow(win.id));
+        });
+
+        function startDrag(e, windowId) {
+            e.preventDefault();
+            if (e.target.classList.contains('window-close')) return;
+
+            draggedWindow = document.getElementById(windowId);
+            focusWindow(windowId);
+
+            const rect = draggedWindow.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function drag(e) {
+            if (!draggedWindow) return;
+            e.preventDefault();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            let newX = clientX - dragOffset.x;
+            let newY = clientY - dragOffset.y;
+
+            newX = Math.max(0, Math.min(newX, window.innerWidth - draggedWindow.offsetWidth));
+            newY = Math.max(24, Math.min(newY, window.innerHeight - 40));
+
+            draggedWindow.style.left = newX + 'px';
+            draggedWindow.style.top = newY + 'px';
+        }
+
+        function stopDrag() {
+            draggedWindow = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        // ========== MODE MANAGEMENT ==========
+        function selectMode(mode) {
+            playSound('startup');
+            currentMode = mode;
+
+            const desktop = document.getElementById('desktop');
+            desktop.className = '';
+
+            if (mode === 'mac') {
+                desktop.classList.add('mac-theme');
+            } else {
+                desktop.classList.add('vapor-theme');
+            }
+
+            document.getElementById('mode-selector').classList.remove('active');
+            desktop.classList.add('active');
+
+            updateClock();
+        }
+
+        function switchMode() {
+            playSound('click');
+            document.getElementById('desktop').classList.remove('active');
+            document.getElementById('mode-selector').classList.add('active');
+        }
+
+        // ========== UI HELPERS ==========
+        function toggleFolder(element) {
+            playSound('click');
+            element.classList.toggle('open');
+        }
+
+        function showAbout() {
+            playSound('beep');
+            showAlert('RETRO COMPUTER\n\nUltimate Vintage OS Experience\n\nCombining Mac Classic & Vaporwave 95\n\nHTML5 Recreation with Web Audio API', 'ℹ️');
+        }
+
+        function showAlert(message, icon = '⚠️') {
+            document.getElementById('modal-icon').textContent = icon;
+            document.getElementById('modal-text').textContent = message;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function restart() {
+            playSound('beep');
+            location.reload();
+        }
+
+        function shutdown() {
+            playSound('beep');
+            if (isPlaying) musicControl('stop');
+            document.body.style.background = '#000';
+            document.getElementById('desktop').style.opacity = '0';
+            setTimeout(() => {
+                showAlert('You may now close this window\n\nClick OK to restart', '😴');
+                document.getElementById('modal').onclick = () => location.reload();
+            }, 1000);
+        }
+
+        // ========== MENU SYSTEM ==========
+        let activeMenu = null;
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                playSound('click');
+                const menuId = item.dataset.menu;
+                const dropdown = document.getElementById(menuId + '-menu');
+
+                if (activeMenu && activeMenu !== dropdown) {
+                    activeMenu.classList.remove('active');
+                    activeMenu.parentElement.classList.remove('active');
+                }
+
+                if (dropdown) {
+                    const isActive = dropdown.classList.toggle('active');
+                    item.classList.toggle('active', isActive);
+                    activeMenu = isActive ? dropdown : null;
+                }
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-item') && !e.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu, .menu-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                activeMenu = null;
+            }
+        });
+
+        // ========== CLOCK ==========
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            const timeString = `${displayHours}:${minutes} ${ampm}`;
+
+            const menuClock = document.getElementById('menu-clock');
+            const taskbarClock = document.getElementById('taskbar-clock');
+            if (menuClock) menuClock.textContent = timeString;
+            if (taskbarClock) taskbarClock.textContent = timeString;
+        }
+
+        // ========== DESKTOP ICONS ==========
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                if (e.detail === 1) {
+                    playSound('click');
+                    document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+                    icon.classList.add('selected');
+                }
+            });
+        });
+
+        // ========== INITIALIZATION ==========
+        window.addEventListener('load', () => {
+            playSound('startup');
+
+            setTimeout(() => {
+                document.getElementById('boot-screen').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('mode-selector').classList.add('active');
+                }, 500);
+            }, 3500);
+
+            setInterval(updateClock, 1000);
+        });
+
+        // Auto-play track on music player open
+        const musicPlayer = document.getElementById('music-player');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.classList.contains('active') && currentTrack === -1) {
+                    selectTrack(0);
+                }
+            });
+        });
+        observer.observe(musicPlayer, { attributes: true, attributeFilter: ['class'] });
+
+        // Prevent text selection during drag
+        document.addEventListener('selectstart', (e) => {
+            if (draggedWindow) e.preventDefault();
+        });
+
+        // Easter egg: Double-click desktop
+        let clickCount = 0;
+        let clickTimer;
+        document.getElementById('desktop').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                clickCount++;
+                clearTimeout(clickTimer);
+
+                if (clickCount === 2) {
+                    playSound('success');
+                    showAlert('✨ Easter Egg Found!\n\nYou discovered the secret desktop click!\n\n🎉 Achievement Unlocked', '🦄');
+                    clickCount = 0;
+                } else {
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, 300);
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'm') {
+                e.preventDefault();
+                switchMode();
+            }
+            if (e.key === 'Escape') {
+                closeActiveWindow();
+            }
+        });
+    </script>
+</body>
+</html>
