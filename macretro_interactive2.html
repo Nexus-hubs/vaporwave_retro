@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Classic Macintosh Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Chicago', 'Courier New', monospace;
+            overflow: hidden;
+            background: #c0c0c0;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        /* Boot Screen */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('MACRETRO/wall paper1.jpg') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 1s;
+        }
+
+        #boot-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .boot-panel {
+            background: #d0d0d0;
+            border: 2px solid #000;
+            padding: 40px;
+            text-align: center;
+            box-shadow: inset -1px -1px 0 #888, inset 1px 1px 0 #fff;
+        }
+
+        .boot-logo {
+            width: 200px;
+            max-width: 80vw;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .boot-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .progress-bar {
+            width: 300px;
+            max-width: 80vw;
+            height: 20px;
+            background: #fff;
+            border: 2px solid #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000;
+            width: 0%;
+            animation: bootProgress 3s forwards;
+        }
+
+        @keyframes bootProgress {
+            to { width: 100%; }
+        }
+
+        /* Desktop */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #c0c0c0;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVQIW2NkYGD4z8DAwMgABAABDgEBKkV3mQAAAABJRU5ErkJggg==');
+            display: none;
+        }
+
+        #desktop.active {
+            display: block;
+        }
+
+        /* Menu Bar */
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .menu-item {
+            padding: 2px 10px;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: #000;
+            color: #fff;
+        }
+
+        .apple-logo {
+            font-size: 14px;
+            padding: 0 8px;
+        }
+
+        .menu-clock {
+            margin-left: auto;
+            padding-right: 10px;
+            font-size: 11px;
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            min-width: 150px;
+            display: none;
+            z-index: 10000;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 5px 20px 5px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 11px;
+            color: #000;
+        }
+
+        .dropdown-item:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .dropdown-item.disabled {
+            color: #888;
+            cursor: default;
+        }
+
+        .dropdown-item.disabled:hover {
+            background: #fff;
+            color: #888;
+        }
+
+        /* Desktop Icons */
+        .desktop-icon {
+            position: absolute;
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .desktop-icon.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 5px;
+            background: #fff;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            overflow: hidden;
+        }
+
+        .icon-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .icon-label {
+            font-size: 10px;
+            word-wrap: break-word;
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            min-width: 200px;
+            min-height: 150px;
+            display: none;
+        }
+
+        .window.active {
+            display: block;
+            z-index: 100;
+        }
+
+        .window.focused {
+            z-index: 1000;
+        }
+
+        .window-titlebar {
+            background: #fff;
+            border-bottom: 1px solid #000;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            position: relative;
+            touch-action: none;
+        }
+
+        .window.focused .window-titlebar {
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 1px,
+                #fff 1px,
+                #fff 2px
+            );
+        }
+
+        .window-close {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            margin: 0 3px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .window-close:hover {
+            background: #000;
+        }
+
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .window.focused .window-title {
+            color: #000;
+        }
+
+        .window-content {
+            padding: 10px;
+            height: calc(100% - 20px);
+            overflow: auto;
+            background: #fff;
+        }
+
+        /* Folder Grid */
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .folder-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .folder-item:hover {
+            background: #e0e0e0;
+        }
+
+        .folder-item.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .folder-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            overflow: hidden;
+        }
+
+        .folder-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .folder-name {
+            font-size: 10px;
+            word-wrap: break-word;
+        }
+
+        /* Calculator */
+        .calculator {
+            width: 220px;
+        }
+
+        .calc-display {
+            background: #d0f0d0;
+            border: 2px inset #888;
+            padding: 10px;
+            text-align: right;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 5px;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 5px;
+        }
+
+        .calc-button {
+            background: #d0d0d0;
+            border: 2px outset #fff;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .calc-button:active {
+            border-style: inset;
+            background: #b0b0b0;
+        }
+
+        /* About Mac Window */
+        .about-content {
+            display: flex;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .about-icon {
+            width: 64px;
+            height: 64px;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .about-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .about-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .about-info h3 {
+            margin-bottom: 10px;
+        }
+
+        .memory-bar {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #000;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .memory-used {
+            height: 100%;
+            background: #000;
+            width: 65%;
+        }
+
+        /* Text Editor */
+        .text-editor {
+            width: 500px;
+            height: 400px;
+            max-width: 90vw;
+            max-height: 70vh;
+        }
+
+        .text-content {
+            width: 100%;
+            height: 100%;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            resize: none;
+        }
+
+        /* Image Viewer */
+        .image-viewer {
+            padding: 0;
+            text-align: center;
+            background: #000;
+        }
+
+        .image-viewer img {
+            max-width: 100%;
+            max-height: 500px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Shutdown Screen */
+        #shutdown-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        #shutdown-screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .shutdown-message {
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+            padding: 40px;
+            background: #333;
+            border: 2px solid #fff;
+        }
+
+        /* Main Mac GIF */
+        .main-mac-gif {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            border: 2px solid #000;
+            background: #fff;
+            padding: 5px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+        }
+
+        .main-mac-gif img {
+            width: 100%;
+            display: block;
+        }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: #d0d0d0;
+            border: 2px solid #000;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 90vw;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 16px;
+            height: 16px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1;
+            color: #000;
+        }
+
+        .modal-close:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .modal-content {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 32px;
+            margin-right: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-button {
+            background: #fff;
+            border: 2px outset #fff;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-button:active {
+            border-style: inset;
+        }
+
+        /* Network Browser */
+        .network-list {
+            list-style: none;
+            padding: 10px;
+        }
+
+        .network-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+
+        .network-item:hover {
+            background: #e0e0e0;
+        }
+
+        .network-item::before {
+            content: '💻';
+            margin-right: 10px;
+        }
+
+        /* Music Player */
+        .music-player {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .player-controls {
+            margin-top: 20px;
+        }
+
+        .player-button {
+            background: #d0d0d0;
+            border: 2px outset #fff;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .player-button:active {
+            border-style: inset;
+        }
+
+        .track-list {
+            list-style: none;
+            padding: 10px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .track-item:hover {
+            background: #e0e0e0;
+        }
+
+        .track-item.playing {
+            background: #000;
+            color: #fff;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fff;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #c0c0c0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .menu-bar {
+                font-size: 10px;
+            }
+
+            .menu-item {
+                padding: 2px 5px;
+            }
+
+            .desktop-icon {
+                width: 70px;
+            }
+
+            .icon-image {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+
+            .window {
+                max-width: 95vw !important;
+                max-height: 80vh !important;
+            }
+
+            .main-mac-gif {
+                width: 100px;
+                bottom: 10px;
+                left: 10px;
+            }
+
+            .calc-button {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .boot-panel {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-clock {
+                display: none;
+            }
+
+            .folder-grid {
+                grid-template-columns: repeat(auto-fill, 70px);
+                gap: 5px;
+            }
+
+            .desktop-icon {
+                width: 60px;
+            }
+
+            .icon-image {
+                width: 35px;
+                height: 35px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="boot-screen">
+        <div class="boot-panel">
+            <img src="MACRETRO/MAIN MAC.gif" alt="Mac Logo" class="boot-logo">
+            <div class="boot-text">Starting up...</div>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shutdown Screen -->
+    <div id="shutdown-screen">
+        <div class="shutdown-message">
+            <div style="font-size: 48px; margin-bottom: 20px;">😴</div>
+            <div>You may now switch off your Macintosh HTML simulation</div>
+            <div style="margin-top: 20px; font-size: 12px; color: #aaa;">Click anywhere to restart</div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-dialog">
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            <div class="modal-content">
+                <div class="modal-icon">⚠️</div>
+                <div class="modal-text" id="modal-text">Alert message</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-item apple-logo" data-menu="apple">
+                <span style="font-size: 16px;">🍎</span>
+                <div class="dropdown-menu" id="apple-menu">
+                    <div class="dropdown-item" onclick="showAboutMac()">About This Macintosh</div>
+                    <div class="dropdown-item disabled">──────────</div>
+                    <div class="dropdown-item" onclick="openWindow('control-panels')">Control Panels...</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="file">
+                File
+                <div class="dropdown-menu" id="file-menu">
+                    <div class="dropdown-item" onclick="showAlert('Open feature not implemented')">Open</div>
+                    <div class="dropdown-item" onclick="closeActiveWindow()">Close</div>
+                    <div class="dropdown-item" onclick="showAlert('Print feature is simulated')">Print...</div>
+                    <div class="dropdown-item disabled">──────────</div>
+                    <div class="dropdown-item" onclick="showAlert('Eject feature not implemented')">Eject</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="edit">
+                Edit
+                <div class="dropdown-menu" id="edit-menu">
+                    <div class="dropdown-item" onclick="document.execCommand('copy')">Copy</div>
+                    <div class="dropdown-item" onclick="document.execCommand('paste')">Paste</div>
+                    <div class="dropdown-item" onclick="document.execCommand('selectAll')">Select All</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="view">
+                View
+                <div class="dropdown-menu" id="view-menu">
+                    <div class="dropdown-item" onclick="showAlert('Icon view active')">Icon View</div>
+                    <div class="dropdown-item" onclick="showAlert('List view not implemented')">List View</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="special">
+                Special
+                <div class="dropdown-menu" id="special-menu">
+                    <div class="dropdown-item" onclick="emptyTrash()">Empty Trash</div>
+                    <div class="dropdown-item disabled">──────────</div>
+                    <div class="dropdown-item" onclick="restart()">Restart</div>
+                    <div class="dropdown-item" onclick="shutdown()">Shut Down</div>
+                </div>
+            </div>
+            <div class="menu-clock" id="clock">12:00 PM</div>
+        </div>
+
+        <!-- Desktop Icons -->
+        <div class="desktop-icon" style="top: 40px; right: 20px;" data-icon="disk" ondblclick="openWindow('macintosh-disk')">
+            <div class="icon-image">
+                <img src="MACRETRO/DISK.png" alt="Disk">
+            </div>
+            <div class="icon-label">Macintosh Disk</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 140px; right: 20px;" data-icon="tools" ondblclick="openWindow('disk-tools')">
+            <div class="icon-image">🔧</div>
+            <div class="icon-label">Disk Tools</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 240px; right: 20px;" data-icon="control" ondblclick="openWindow('control-panels')">
+            <div class="icon-image">⚙️</div>
+            <div class="icon-label">Control Panels</div>
+        </div>
+
+        <div class="desktop-icon" style="top: 340px; right: 20px;" data-icon="teachtext" ondblclick="openTextEditor()">
+            <div class="icon-image">📝</div>
+            <div class="icon-label">TeachText</div>
+        </div>
+
+        <div class="desktop-icon" style="bottom: 40px; right: 20px;" data-icon="trash" ondblclick="showAlert('Trash is empty')">
+            <div class="icon-image">
+                <img src="MACRETRO/trash.png" alt="Trash">
+            </div>
+            <div class="icon-label">Trash</div>
+        </div>
+
+        <!-- Main Mac GIF -->
+        <div class="main-mac-gif">
+            <img src="MACRETRO/MAIN MAC.gif" alt="Main Mac">
+        </div>
+
+        <!-- Windows -->
+        <!-- Macintosh Disk Window -->
+        <div class="window" id="macintosh-disk" style="left: 100px; top: 100px; width: 500px; height: 350px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'macintosh-disk')" ontouchstart="startDrag(event, 'macintosh-disk')">
+                <div class="window-close" onclick="closeWindow('macintosh-disk')"></div>
+                <div class="window-title">Macintosh Disk</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openWindow('system-folder')">
+                        <div class="folder-icon">📁</div>
+                        <div class="folder-name">System Folder</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('applications')">
+                        <div class="folder-icon">📂</div>
+                        <div class="folder-name">Applications</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('ev-sounds')">
+                        <div class="folder-icon">🔊</div>
+                        <div class="folder-name">EV Sounds</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openMusicPlayer()">
+                        <div class="folder-icon">🎵</div>
+                        <div class="folder-name">EV Music</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openHistory()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/history.png" alt="History">
+                        </div>
+                        <div class="folder-name">history.txt</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('wallpapers')">
+                        <div class="folder-icon">🖼️</div>
+                        <div class="folder-name">Wallpapers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Folder Window -->
+        <div class="window" id="system-folder" style="left: 150px; top: 120px; width: 500px; height: 350px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'system-folder')" ontouchstart="startDrag(event, 'system-folder')">
+                <div class="window-close" onclick="closeWindow('system-folder')"></div>
+                <div class="window-title">System Folder</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openWindow('apple-menu-items')">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/apple menu items.png" alt="Apple Menu Items">
+                        </div>
+                        <div class="folder-name">Apple Menu Items</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('extensions')">
+                        <div class="folder-icon">📦</div>
+                        <div class="folder-name">Extensions</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('control-panels')">
+                        <div class="folder-icon">⚙️</div>
+                        <div class="folder-name">Control Panels</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('fonts')">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Fonts</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('preferences')">
+                        <div class="folder-icon">⚙️</div>
+                        <div class="folder-name">Preferences</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('startup-items')">
+                        <div class="folder-icon">🚀</div>
+                        <div class="folder-name">Startup Items</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('shutdown-items')">
+                        <div class="folder-icon">🛑</div>
+                        <div class="folder-name">Shutdown Items</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apple Menu Items Window -->
+        <div class="window" id="apple-menu-items" style="left: 200px; top: 140px; width: 450px; height: 350px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'apple-menu-items')" ontouchstart="startDrag(event, 'apple-menu-items')">
+                <div class="window-close" onclick="closeWindow('apple-menu-items')"></div>
+                <div class="window-title">Apple Menu Items</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="showAboutMac()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/apple system.png" alt="System">
+                        </div>
+                        <div class="folder-name">Apple System Profiler</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openCalculator()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/calculator.png" alt="Calculator">
+                        </div>
+                        <div class="folder-name">Calculator</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('control-panels')">
+                        <div class="folder-icon">⚙️</div>
+                        <div class="folder-name">Control Panels</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('favorites')">
+                        <div class="folder-icon">⭐</div>
+                        <div class="folder-name">Favorites</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('recent-apps')">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/recent.png" alt="Recent">
+                        </div>
+                        <div class="folder-name">Recent Applications</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openNetworkBrowser()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/network.png" alt="Network">
+                        </div>
+                        <div class="folder-name">Network Browser</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Chooser not implemented')">
+                        <div class="folder-icon">🖨️</div>
+                        <div class="folder-name">Chooser</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Key Caps not implemented')">
+                        <div class="folder-icon">⌨️</div>
+                        <div class="folder-name">Key Caps</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications Window -->
+        <div class="window" id="applications" style="left: 250px; top: 150px; width: 450px; height: 350px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'applications')" ontouchstart="startDrag(event, 'applications')">
+                <div class="window-close" onclick="closeWindow('applications')"></div>
+                <div class="window-title">Applications</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openCalculator()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/calculator_2.png" alt="Calculator">
+                        </div>
+                        <div class="folder-name">Calculator</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openTextEditor()">
+                        <div class="folder-icon">📝</div>
+                        <div class="folder-name">TeachText</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openNetworkBrowser()">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/network.png" alt="Network">
+                        </div>
+                        <div class="folder-name">Network Browser</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openImageViewer('MACRETRO/photoshop.png', 'Photoshop')">
+                        <div class="folder-icon">🎨</div>
+                        <div class="folder-name">Photoshop</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openImageViewer('MACRETRO/computer_paint.png', 'MacPaint')">
+                        <div class="folder-icon">🖌️</div>
+                        <div class="folder-name">MacPaint</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('installer-app')">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/installer.png" alt="Installer">
+                        </div>
+                        <div class="folder-name">Installer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk Tools Window -->
+        <div class="window" id="disk-tools" style="left: 180px; top: 180px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'disk-tools')" ontouchstart="startDrag(event, 'disk-tools')">
+                <div class="window-close" onclick="closeWindow('disk-tools')"></div>
+                <div class="window-title">Disk Tools</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="showAlert('Disk Copy simulates copying floppy disks')">
+                        <div class="folder-icon">
+                            <img src="MACRETRO/disk copy.png" alt="Disk Copy">
+                        </div>
+                        <div class="folder-name">Disk Copy</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Disk First Aid checks disk integrity')">
+                        <div class="folder-icon">🔍</div>
+                        <div class="folder-name">Disk First Aid</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Drive Setup formats and partitions disks')">
+                        <div class="folder-icon">📊</div>
+                        <div class="folder-name">Drive Setup</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extensions Window -->
+        <div class="window" id="extensions" style="left: 220px; top: 160px; width: 400px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'extensions')" ontouchstart="startDrag(event, 'extensions')">
+                <div class="window-close" onclick="closeWindow('extensions')"></div>
+                <div class="window-title">Extensions</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item">
+                        <div class="folder-icon">🔌</div>
+                        <div class="folder-name">QuickTime Extension</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔌</div>
+                        <div class="folder-name">AppleScript</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔌</div>
+                        <div class="folder-name">ColorSync</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔌</div>
+                        <div class="folder-name">File Sharing Extension</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panels Window -->
+        <div class="window" id="control-panels" style="left: 240px; top: 140px; width: 400px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'control-panels')" ontouchstart="startDrag(event, 'control-panels')">
+                <div class="window-close" onclick="closeWindow('control-panels')"></div>
+                <div class="window-title">Control Panels</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="showAlert('Appearance settings')">
+                        <div class="folder-icon">🎨</div>
+                        <div class="folder-name">Appearance</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Sound settings')">
+                        <div class="folder-icon">🔊</div>
+                        <div class="folder-name">Sound</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Mouse settings')">
+                        <div class="folder-icon">🖱️</div>
+                        <div class="folder-name">Mouse</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('Monitors settings')">
+                        <div class="folder-icon">🖥️</div>
+                        <div class="folder-name">Monitors</div>
+                    </div>
+                    <div class="folder-item" ondblclick="showAlert('General Controls')">
+                        <div class="folder-icon">⚙️</div>
+                        <div class="folder-name">General Controls</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fonts Window -->
+        <div class="window" id="fonts" style="left: 260px; top: 160px; width: 400px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'fonts')" ontouchstart="startDrag(event, 'fonts')">
+                <div class="window-close" onclick="closeWindow('fonts')"></div>
+                <div class="window-title">Fonts</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Chicago</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Geneva</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Monaco</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Palatino</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Times</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🔤</div>
+                        <div class="folder-name">Helvetica</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences Window -->
+        <div class="window" id="preferences" style="left: 280px; top: 180px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'preferences')" ontouchstart="startDrag(event, 'preferences')">
+                <div class="window-close" onclick="closeWindow('preferences')"></div>
+                <div class="window-title">Preferences</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item">
+                        <div class="folder-icon">📄</div>
+                        <div class="folder-name">Finder Preferences</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">📄</div>
+                        <div class="folder-name">Internet Preferences</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">📄</div>
+                        <div class="folder-name">QuickTime Preferences</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Startup Items Window -->
+        <div class="window" id="startup-items" style="left: 200px; top: 200px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'startup-items')" ontouchstart="startDrag(event, 'startup-items')">
+                <div class="window-close" onclick="closeWindow('startup-items')"></div>
+                <div class="window-title">Startup Items</div>
+            </div>
+            <div class="window-content">
+                <p style="padding: 20px; text-align: center;">Items in this folder are loaded when the system starts up.</p>
+                <div class="folder-grid">
+                    <div class="folder-item">
+                        <div class="folder-icon">🚀</div>
+                        <div class="folder-name">QuickTime</div>
+                    </div>
+                    <div class="folder-item">
+                        <div class="folder-icon">🚀</div>
+                        <div class="folder-name">File Sharing</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shutdown Items Window -->
+        <div class="window" id="shutdown-items" style="left: 220px; top: 220px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'shutdown-items')" ontouchstart="startDrag(event, 'shutdown-items')">
+                <div class="window-close" onclick="closeWindow('shutdown-items')"></div>
+                <div class="window-title">Shutdown Items</div>
+            </div>
+            <div class="window-content">
+                <p style="padding: 20px; text-align: center;">Items in this folder are executed when the system shuts down.</p>
+                <div class="folder-grid">
+                    <div class="folder-item">
+                        <div class="folder-icon">🛑</div>
+                        <div class="folder-name">Clean Temp Files</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Favorites Window -->
+        <div class="window" id="favorites" style="left: 240px; top: 180px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'favorites')" ontouchstart="startDrag(event, 'favorites')">
+                <div class="window-close" onclick="closeWindow('favorites')"></div>
+                <div class="window-title">Favorites</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openWindow('macintosh-disk')">
+                        <div class="folder-icon">💾</div>
+                        <div class="folder-name">Macintosh HD</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openWindow('applications')">
+                        <div class="folder-icon">📂</div>
+                        <div class="folder-name">Applications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Apps Window -->
+        <div class="window" id="recent-apps" style="left: 260px; top: 200px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'recent-apps')" ontouchstart="startDrag(event, 'recent-apps')">
+                <div class="window-close" onclick="closeWindow('recent-apps')"></div>
+                <div class="window-title">Recent Applications</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openCalculator()">
+                        <div class="folder-icon">🔢</div>
+                        <div class="folder-name">Calculator</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openTextEditor()">
+                        <div class="folder-icon">📝</div>
+                        <div class="folder-name">TeachText</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EV Sounds Window -->
+        <div class="window" id="ev-sounds" style="left: 280px; top: 160px; width: 400px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'ev-sounds')" ontouchstart="startDrag(event, 'ev-sounds')">
+                <div class="window-close" onclick="closeWindow('ev-sounds')"></div>
+                <div class="window-title">EV Sounds</div>
+            </div>
+            <div class="window-content">
+                <div style="padding: 20px; text-align: center;">
+                    <h3 style="margin-bottom: 15px;">System Sounds</h3>
+                    <div style="display: grid; gap: 10px;">
+                        <button class="modal-button" onclick="playSound('startup')">🔔 Startup Chime</button>
+                        <button class="modal-button" onclick="playSound('click')">🖱️ Click Sound</button>
+                        <button class="modal-button" onclick="playSound('open')">📂 Window Open</button>
+                        <button class="modal-button" onclick="playSound('close')">❌ Window Close</button>
+                        <button class="modal-button" onclick="playSound('beep')">⚠️ Alert Beep</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallpapers Window -->
+        <div class="window" id="wallpapers" style="left: 200px; top: 140px; width: 400px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'wallpapers')" ontouchstart="startDrag(event, 'wallpapers')">
+                <div class="window-close" onclick="closeWindow('wallpapers')"></div>
+                <div class="window-title">Wallpapers</div>
+            </div>
+            <div class="window-content">
+                <div class="folder-grid">
+                    <div class="folder-item" ondblclick="openImageViewer('MACRETRO/wall paper1.jpg', 'Wall Paper 1')">
+                        <div class="folder-icon">🖼️</div>
+                        <div class="folder-name">Wall Paper 1</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openImageViewer('MACRETRO/wallpaper2.jpg', 'Wall Paper 2')">
+                        <div class="folder-icon">🖼️</div>
+                        <div class="folder-name">Wall Paper 2</div>
+                    </div>
+                    <div class="folder-item" ondblclick="openImageViewer('MACRETRO/MACOS_2.png', 'Mac OS Classic')">
+                        <div class="folder-icon">🖼️</div>
+                        <div class="folder-name">Mac OS Classic</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installer App Window -->
+        <div class="window" id="installer-app" style="left: 240px; top: 160px; width: 400px; height: 250px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'installer-app')" ontouchstart="startDrag(event, 'installer-app')">
+                <div class="window-close" onclick="closeWindow('installer-app')"></div>
+                <div class="window-title">Installer</div>
+            </div>
+            <div class="window-content">
+                <div style="padding: 20px; text-align: center;">
+                    <img src="MACRETRO/installer.png" alt="Installer" style="max-width: 100%; height: auto; margin-bottom: 15px;">
+                    <p>The Installer helps you install system software and applications.</p>
+                    <button class="modal-button" style="margin-top: 15px;" onclick="showAlert('Installer is for demonstration purposes only')">Install...</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Window -->
+        <div class="window calculator" id="calculator" style="left: 300px; top: 200px; width: 220px; height: 300px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'calculator')" ontouchstart="startDrag(event, 'calculator')">
+                <div class="window-close" onclick="closeWindow('calculator')"></div>
+                <div class="window-title">Calculator</div>
+            </div>
+            <div class="window-content" style="padding: 5px;">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-buttons">
+                    <button class="calc-button" onclick="calcInput('7')">7</button>
+                    <button class="calc-button" onclick="calcInput('8')">8</button>
+                    <button class="calc-button" onclick="calcInput('9')">9</button>
+                    <button class="calc-button" onclick="calcInput('÷')">÷</button>
+                    <button class="calc-button" onclick="calcInput('4')">4</button>
+                    <button class="calc-button" onclick="calcInput('5')">5</button>
+                    <button class="calc-button" onclick="calcInput('6')">6</button>
+                    <button class="calc-button" onclick="calcInput('×')">×</button>
+                    <button class="calc-button" onclick="calcInput('1')">1</button>
+                    <button class="calc-button" onclick="calcInput('2')">2</button>
+                    <button class="calc-button" onclick="calcInput('3')">3</button>
+                    <button class="calc-button" onclick="calcInput('-')">−</button>
+                    <button class="calc-button" onclick="calcInput('0')">0</button>
+                    <button class="calc-button" onclick="calcInput('.')">.</button>
+                    <button class="calc-button" onclick="calcEquals()">=</button>
+                    <button class="calc-button" onclick="calcInput('+')">+</button>
+                    <button class="calc-button" onclick="calcClear()" style="grid-column: span 4;">C</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- About This Macintosh Window -->
+        <div class="window" id="about-mac" style="left: 350px; top: 150px; width: 450px; height: 280px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'about-mac')" ontouchstart="startDrag(event, 'about-mac')">
+                <div class="window-close" onclick="closeWindow('about-mac')"></div>
+                <div class="window-title">About This Macintosh</div>
+            </div>
+            <div class="window-content">
+                <div class="about-content">
+                    <div class="about-icon">
+                        <img src="MACRETRO/about.png" alt="About Mac">
+                    </div>
+                    <div class="about-info">
+                        <h3>System Software 7.5.3</h3>
+                        <p style="margin-bottom: 10px;">Revision 2</p>
+                        <p style="font-size: 11px; margin-bottom: 15px;">© Apple Computer, Inc. 1983-1996</p>
+                        <div style="font-size: 11px;">
+                            <strong>Total Memory:</strong> 8,192 KB
+                            <div class="memory-bar">
+                                <div class="memory-used"></div>
+                            </div>
+                            <strong>Largest Unused Block:</strong> 2,845 KB
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Editor Window -->
+        <div class="window text-editor" id="text-editor" style="left: 200px; top: 100px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'text-editor')" ontouchstart="startDrag(event, 'text-editor')">
+                <div class="window-close" onclick="closeWindow('text-editor')"></div>
+                <div class="window-title">TeachText - Welcome</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <textarea class="text-content" id="text-area">Welcome to your Classic Mac Simulation!
+
+This is a pixel-perfect recreation of the classic Macintosh desktop experience from the late 80s and early 90s.
+
+Tips for using this simulation:
+• Double-click icons to open them
+• Drag windows by their title bars
+• Click window close boxes to close them
+• Use the menu bar at the top for various functions
+• Try the Calculator app for basic arithmetic
+• Explore the System Folder and Apple Menu Items
+• Check out EV Music for retro tunes!
+
+This simulation captures the charming simplicity of early personal computing. Enjoy your journey back in time!
+
+You can edit this text, copy, paste, and use basic text editing functions.
+
+System Info:
+- Mac OS Classic Simulation
+- HTML5 & JavaScript Recreation
+- Mobile & Desktop Compatible
+- Authentic sounds and interactions</textarea>
+            </div>
+        </div>
+
+        <!-- History Text Window -->
+        <div class="window text-editor" id="history-window" style="left: 220px; top: 120px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'history-window')" ontouchstart="startDrag(event, 'history-window')">
+                <div class="window-close" onclick="closeWindow('history-window')"></div>
+                <div class="window-title">history.txt</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <textarea class="text-content" readonly>The Macintosh Story
+
+In 1984, Apple Computer introduced the Macintosh, revolutionizing personal computing with its graphical user interface and mouse-driven navigation.
+
+The Macintosh was the first commercially successful personal computer to feature a graphical user interface, built-in screen, and mouse. It was designed to be user-friendly and accessible to non-technical users.
+
+Key Milestones:
+- 1984: Original Macintosh released
+- 1985: System 1.0 introduced
+- 1991: System 7 launched with color support
+- 1996: Mac OS 7.6 released
+- 1997: Mac OS 8 introduced modern interface
+
+The classic Mac OS featured:
+• Desktop metaphor with files and folders
+• Drag-and-drop functionality
+• Hierarchical file system
+• Cooperative multitasking
+• Extensive use of icons and visual elements
+
+The interface you're experiencing now is inspired by System 7 through Mac OS 8, representing the golden age of classic Macintosh computing.
+
+These systems laid the foundation for modern computing interfaces and user experience design principles still used today.</textarea>
+            </div>
+        </div>
+
+        <!-- Network Browser Window -->
+        <div class="window" id="network-browser" style="left: 280px; top: 160px; width: 400px; height: 350px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'network-browser')" ontouchstart="startDrag(event, 'network-browser')">
+                <div class="window-close" onclick="closeWindow('network-browser')"></div>
+                <div class="window-title">Network Browser</div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <div style="padding: 20px; text-align: center; border-bottom: 1px solid #ccc;">
+                    <img src="MACRETRO/network.png" alt="Network" style="max-width: 80px; margin-bottom: 10px;">
+                    <div style="font-size: 12px; color: #666;">Local Network</div>
+                </div>
+                <ul class="network-list">
+                    <li class="network-item" onclick="showNetworkMessage('retro_bbs')">retro_bbs</li>
+                    <li class="network-item" onclick="showNetworkMessage('applelink')">AppleLink</li>
+                    <li class="network-item" onclick="showNetworkMessage('old_web_archive')">old_web_archive</li>
+                    <li class="network-item" onclick="showNetworkMessage('local_server')">local_server</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Music Player Window -->
+        <div class="window" id="music-player" style="left: 250px; top: 140px; width: 450px; height: 400px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'music-player')" ontouchstart="startDrag(event, 'music-player')">
+                <div class="window-close" onclick="closeWindow('music-player')"></div>
+                <div class="window-title">EV Music Player</div>
+            </div>
+            <div class="window-content">
+                <div class="music-player">
+                    <h3>🎵 Classic Mac Tunes</h3>
+                    <div style="margin: 20px 0;">
+                        <div style="font-size: 14px; margin-bottom: 10px;">Now Playing:</div>
+                        <div id="now-playing" style="font-weight: bold; margin-bottom: 5px;">No track selected</div>
+                        <div id="track-time" style="font-size: 11px; color: #666;">0:00</div>
+                    </div>
+                    <div class="player-controls">
+                        <button class="player-button" onclick="musicControl('prev')" title="Previous">⏮️</button>
+                        <button class="player-button" id="play-pause-btn" onclick="musicControl('play')" title="Play/Pause">▶️</button>
+                        <button class="player-button" onclick="musicControl('next')" title="Next">⏭️</button>
+                        <button class="player-button" onclick="musicControl('stop')" title="Stop">⏹️</button>
+                    </div>
+                    <ul class="track-list">
+                        <li class="track-item" onclick="selectTrack(0)">🎼 Classic Mac Startup</li>
+                        <li class="track-item" onclick="selectTrack(1)">🎹 Retro Menu Theme</li>
+                        <li class="track-item" onclick="selectTrack(2)">🎸 Vintage Desktop Groove</li>
+                        <li class="track-item" onclick="selectTrack(3)">🎺 System 7 Melody</li>
+                        <li class="track-item" onclick="selectTrack(4)">🎻 QuickTime Serenade</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Viewer Window -->
+        <div class="window" id="image-viewer" style="left: 260px; top: 140px; width: 600px; height: 500px; max-width: 90vw; max-height: 80vh;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'image-viewer')" ontouchstart="startDrag(event, 'image-viewer')">
+                <div class="window-close" onclick="closeWindow('image-viewer')"></div>
+                <div class="window-title" id="image-viewer-title">Image Viewer</div>
+            </div>
+            <div class="window-content image-viewer">
+                <img id="viewed-image" src="" alt="Viewed Image">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for Sound Effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Music Player State
+        let currentTrack = -1;
+        let isPlaying = false;
+        let musicInterval = null;
+        let trackTime = 0;
+
+        const trackNames = [
+            'Classic Mac Startup',
+            'Retro Menu Theme',
+            'Vintage Desktop Groove',
+            'System 7 Melody',
+            'QuickTime Serenade'
+        ];
+
+        // Sound Effects
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'startup':
+                    oscillator.frequency.value = 523.25; // C5
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    break;
+                case 'click':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.05);
+                    break;
+                case 'open':
+                    oscillator.frequency.value = 400;
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'close':
+                    oscillator.frequency.value = 600;
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.08);
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.08);
+                    break;
+                case 'beep':
+                    oscillator.frequency.value = 1000;
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'shutdown':
+                    oscillator.frequency.value = 400;
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.8);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.8);
+                    break;
+            }
+        }
+
+        // Music Player Functions
+        function playMelody() {
+            const melodies = [
+                [{ freq: 523, dur: 0.2 }, { freq: 659, dur: 0.2 }, { freq: 784, dur: 0.3 }],
+                [{ freq: 440, dur: 0.15 }, { freq: 494, dur: 0.15 }, { freq: 523, dur: 0.15 }, { freq: 587, dur: 0.15 }],
+                [{ freq: 392, dur: 0.25 }, { freq: 440, dur: 0.25 }, { freq: 494, dur: 0.25 }],
+                [{ freq: 523, dur: 0.2 }, { freq: 494, dur: 0.2 }, { freq: 440, dur: 0.2 }, { freq: 392, dur: 0.2 }],
+                [{ freq: 659, dur: 0.3 }, { freq: 587, dur: 0.2 }, { freq: 523, dur: 0.3 }]
+            ];
+
+            if (currentTrack < 0 || currentTrack >= melodies.length) return;
+
+            const melody = melodies[currentTrack];
+            let time = audioContext.currentTime;
+
+            melody.forEach(note => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.frequency.value = note.freq;
+                gain.gain.setValueAtTime(0.15, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + note.dur);
+
+                osc.start(time);
+                osc.stop(time + note.dur);
+
+                time += note.dur;
+            });
+        }
+
+        function selectTrack(index) {
+            document.querySelectorAll('.track-item').forEach((item, i) => {
+                item.classList.toggle('playing', i === index);
+            });
+            currentTrack = index;
+            trackTime = 0;
+            document.getElementById('now-playing').textContent = trackNames[index];
+            document.getElementById('track-time').textContent = '0:00';
+        }
+
+        function musicControl(action) {
+            playSound('click');
+
+            switch(action) {
+                case 'play':
+                    if (currentTrack < 0) {
+                        selectTrack(0);
+                    }
+                    if (!isPlaying) {
+                        isPlaying = true;
+                        document.getElementById('play-pause-btn').textContent = '⏸️';
+                        playMelody();
+                        musicInterval = setInterval(() => {
+                            trackTime++;
+                            const mins = Math.floor(trackTime / 60);
+                            const secs = trackTime % 60;
+                            document.getElementById('track-time').textContent =
+                                `${mins}:${secs.toString().padStart(2, '0')}`;
+
+                            if (trackTime % 3 === 0) {
+                                playMelody();
+                            }
+                        }, 1000);
+                    } else {
+                        isPlaying = false;
+                        document.getElementById('play-pause-btn').textContent = '▶️';
+                        clearInterval(musicInterval);
+                    }
+                    break;
+                case 'stop':
+                    isPlaying = false;
+                    document.getElementById('play-pause-btn').textContent = '▶️';
+                    clearInterval(musicInterval);
+                    trackTime = 0;
+                    document.getElementById('track-time').textContent = '0:00';
+                    break;
+                case 'next':
+                    if (currentTrack < trackNames.length - 1) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack + 1);
+                        if (wasPlaying) musicControl('play');
+                    }
+                    break;
+                case 'prev':
+                    if (currentTrack > 0) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack - 1);
+                        if (wasPlaying) musicControl('play');
+                    }
+                    break;
+            }
+        }
+
+        function openMusicPlayer() {
+            playSound('open');
+            openWindow('music-player');
+        }
+
+        // Boot Sequence
+        window.addEventListener('load', () => {
+            playSound('startup');
+            setTimeout(() => {
+                document.getElementById('boot-screen').classList.add('hidden');
+                document.getElementById('desktop').classList.add('active');
+                updateClock();
+                setInterval(updateClock, 1000);
+            }, 3500);
+        });
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            document.getElementById('clock').textContent = `${displayHours}:${minutes} ${ampm}`;
+        }
+
+        // Menu Handling
+        let activeMenu = null;
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                playSound('click');
+                const menuId = item.dataset.menu;
+                const dropdown = document.getElementById(menuId + '-menu');
+
+                if (activeMenu && activeMenu !== dropdown) {
+                    activeMenu.classList.remove('active');
+                    activeMenu.parentElement.classList.remove('active');
+                }
+
+                if (dropdown) {
+                    const isActive = dropdown.classList.toggle('active');
+                    item.classList.toggle('active', isActive);
+                    activeMenu = isActive ? dropdown : null;
+                }
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-item') && !e.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu, .menu-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                activeMenu = null;
+            }
+        });
+
+        // Desktop Icon Selection
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                if (e.detail === 1) {
+                    playSound('click');
+                    document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+                    icon.classList.add('selected');
+                }
+            });
+        });
+
+        // Window Management
+        let zIndexCounter = 100;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openWindow(windowId) {
+            playSound('open');
+            const win = document.getElementById(windowId);
+            win.classList.add('active');
+            focusWindow(windowId);
+        }
+
+        function closeWindow(windowId) {
+            playSound('close');
+            document.getElementById(windowId).classList.remove('active', 'focused');
+
+            // Stop music if music player is closed
+            if (windowId === 'music-player' && isPlaying) {
+                musicControl('stop');
+            }
+        }
+
+        function closeActiveWindow() {
+            const activeWin = document.querySelector('.window.focused');
+            if (activeWin) {
+                closeWindow(activeWin.id);
+            }
+        }
+
+        function focusWindow(windowId) {
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('focused'));
+            const win = document.getElementById(windowId);
+            win.classList.add('focused');
+            win.style.zIndex = ++zIndexCounter;
+        }
+
+        document.querySelectorAll('.window').forEach(win => {
+            win.addEventListener('mousedown', () => focusWindow(win.id));
+            win.addEventListener('touchstart', () => focusWindow(win.id));
+        });
+
+        function startDrag(e, windowId) {
+            e.preventDefault();
+            if (e.target.classList.contains('window-close')) return;
+
+            draggedWindow = document.getElementById(windowId);
+            focusWindow(windowId);
+
+            const rect = draggedWindow.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function drag(e) {
+            if (!draggedWindow) return;
+            e.preventDefault();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            let newX = clientX - dragOffset.x;
+            let newY = clientY - dragOffset.y;
+
+            newX = Math.max(0, Math.min(newX, window.innerWidth - draggedWindow.offsetWidth));
+            newY = Math.max(24, Math.min(newY, window.innerHeight - 40));
+
+            draggedWindow.style.left = newX + 'px';
+            draggedWindow.style.top = newY + 'px';
+        }
+
+        function stopDrag() {
+            draggedWindow = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        // Calculator
+        let calcValue = '0';
+        let calcOperator = null;
+        let calcPrevValue = null;
+        let calcNewNumber = true;
+
+        function calcInput(value) {
+            playSound('click');
+
+            if (['+', '-', '×', '÷'].includes(value)) {
+                if (calcPrevValue !== null && !calcNewNumber) {
+                    calcEquals();
+                }
+                calcOperator = value;
+                calcPrevValue = parseFloat(calcValue);
+                calcNewNumber = true;
+            } else if (value === '.') {
+                if (!calcValue.includes('.')) {
+                    calcValue += '.';
+                }
+            } else {
+                if (calcNewNumber) {
+                    calcValue = value;
+                    calcNewNumber = false;
+                } else {
+                    calcValue = calcValue === '0' ? value : calcValue + value;
+                }
+            }
+
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        function calcEquals() {
+            playSound('click');
+
+            if (calcOperator && calcPrevValue !== null) {
+                const current = parseFloat(calcValue);
+                let result = 0;
+
+                switch(calcOperator) {
+                    case '+': result = calcPrevValue + current; break;
+                    case '-': result = calcPrevValue - current; break;
+                    case '×': result = calcPrevValue * current; break;
+                    case '÷': result = current !== 0 ? calcPrevValue / current : 0; break;
+                }
+
+                calcValue = result.toString();
+                document.getElementById('calc-display').textContent = calcValue;
+                calcOperator = null;
+                calcPrevValue = null;
+                calcNewNumber = true;
+            }
+        }
+
+        function calcClear() {
+            playSound('click');
+            calcValue = '0';
+            calcOperator = null;
+            calcPrevValue = null;
+            calcNewNumber = true;
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        // Keyboard support for calculator
+        document.addEventListener('keydown', (e) => {
+            const calcWin = document.getElementById('calculator');
+            if (!calcWin.classList.contains('focused')) return;
+
+            if (e.key >= '0' && e.key <= '9') calcInput(e.key);
+            else if (e.key === '.') calcInput('.');
+            else if (e.key === '+') calcInput('+');
+            else if (e.key === '-') calcInput('-');
+            else if (e.key === '*') calcInput('×');
+            else if (e.key === '/') { e.preventDefault(); calcInput('÷'); }
+            else if (e.key === 'Enter') { e.preventDefault(); calcEquals(); }
+            else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') calcClear();
+        });
+
+        // Specific Window Openers
+        function openCalculator() {
+            openWindow('calculator');
+        }
+
+        function openTextEditor() {
+            openWindow('text-editor');
+        }
+
+        function openHistory() {
+            openWindow('history-window');
+        }
+
+        function openNetworkBrowser() {
+            openWindow('network-browser');
+        }
+
+        function showAboutMac() {
+            openWindow('about-mac');
+        }
+
+        function openImageViewer(imagePath, title) {
+            playSound('open');
+            document.getElementById('viewed-image').src = imagePath;
+            document.getElementById('image-viewer-title').textContent = title;
+            openWindow('image-viewer');
+        }
+
+        function showNetworkMessage(server) {
+            playSound('beep');
+            showAlert(`This simulation runs offline, but "${server}" would appear as a network volume on a vintage Mac.`);
+        }
+
+        // Modal Dialog
+        function showAlert(message) {
+            playSound('beep');
+            document.getElementById('modal-text').textContent = message;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Trash Functions
+        function emptyTrash() {
+            playSound('beep');
+            showAlert('Trash is already empty.');
+        }
+
+        // System Functions
+        function restart() {
+            playSound('shutdown');
+            if (isPlaying) musicControl('stop');
+
+            document.getElementById('desktop').classList.remove('active');
+            document.getElementById('boot-screen').classList.remove('hidden');
+
+            setTimeout(() => {
+                const progressFill = document.querySelector('.progress-fill');
+                progressFill.style.animation = 'none';
+                progressFill.offsetHeight;
+                progressFill.style.animation = null;
+
+                playSound('startup');
+                setTimeout(() => {
+                    document.getElementById('boot-screen').classList.add('hidden');
+                    document.getElementById('desktop').classList.add('active');
+                }, 3500);
+            }, 1000);
+        }
+
+        function shutdown() {
+            playSound('shutdown');
+            if (isPlaying) musicControl('stop');
+
+            document.querySelectorAll('.window').forEach(win => {
+                win.style.transition = 'opacity 0.5s';
+                win.style.opacity = '0';
+            });
+
+            document.querySelectorAll('.desktop-icon').forEach(icon => {
+                icon.style.transition = 'opacity 0.5s';
+                icon.style.opacity = '0';
+            });
+
+            setTimeout(() => {
+                document.getElementById('desktop').classList.remove('active');
+                document.getElementById('shutdown-screen').classList.add('active');
+
+                document.querySelectorAll('.window').forEach(win => {
+                    win.style.opacity = '1';
+                    win.style.transition = '';
+                });
+                document.querySelectorAll('.desktop-icon').forEach(icon => {
+                    icon.style.opacity = '1';
+                    icon.style.transition = '';
+                });
+            }, 800);
+        }
+
+        document.getElementById('shutdown-screen').addEventListener('click', () => {
+            document.getElementById('shutdown-screen').classList.remove('active');
+            restart();
+        });
+
+        // Folder Item Selection
+        document.querySelectorAll('.folder-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.detail === 1) {
+                    const container = item.closest('.window-content');
+                    container.querySelectorAll('.folder-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                }
+            });
+        });
+
+        // Prevent text selection during drag
+        document.addEventListener('selectstart', (e) => {
+            if (draggedWindow) e.preventDefault();
+        });
+
+        // Prevent default touch behavior
+        document.addEventListener('touchmove', (e) => {
+            if (draggedWindow) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
