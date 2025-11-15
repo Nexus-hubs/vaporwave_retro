@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Retro Computer AI - Ultimate Vintage Experience</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --pink: #ff71ce;
+            --blue: #01cdfe;
+            --purple: #b967ff;
+            --cyan: #05ffa1;
+            --yellow: #fffb96;
+            --gray: #c0c0c0;
+            --dark-gray: #808080;
+            --win95-blue: #000080;
+            --win95-teal: #008080;
+        }
+
+        body {
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            font-family: 'Chicago', 'MS Sans Serif', 'Courier New', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+        }
+
+        /* ========== MODE SELECTOR ========== */
+        #mode-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40000;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #mode-selector.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mode-container {
+            display: flex;
+            gap: 50px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .mode-title {
+            width: 100%;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(20px, 5vw, 36px);
+            color: #fff;
+            text-shadow: 0 0 10px #ff71ce, 0 0 20px #01cdfe;
+            margin-bottom: 50px;
+        }
+
+        .mode-option {
+            width: 300px;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #ff71ce;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 30px var(--pink);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .mode-option:hover {
+            transform: scale(1.05) translateY(-10px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 50px var(--cyan);
+        }
+
+        .mode-option h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--cyan);
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .mode-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .mode-description {
+            font-size: 11px;
+            color: var(--purple);
+            line-height: 1.6;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* ========== MAC CLASSIC THEME ========== */
+        .mac-theme {
+            background: #c0c0c0;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAE0lEQVQIW2NkYGD4z8DAwMgABAABDgEBKkV3mQAAAABJRU5ErkJggg==');
+        }
+
+        /* ========== VAPORWAVE 95 THEME ========== */
+        .vapor-theme {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            position: relative;
+        }
+
+        /* CRT Effect */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: scanlines 0.1s linear infinite;
+            display: none;
+        }
+
+        .vapor-theme .crt-overlay {
+            display: block;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(2px); }
+        }
+
+        /* ========== DESKTOP ========== */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #desktop.active {
+            display: block;
+        }
+
+        /* ========== MENU BAR (MAC) ========== */
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            display: none;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .mac-theme .menu-bar {
+            display: flex;
+        }
+
+        .menu-item {
+            padding: 2px 10px;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: #000;
+            color: #fff;
+        }
+
+        .menu-clock {
+            margin-left: auto;
+            font-family: monospace;
+            font-size: 11px;
+            padding-right: 10px;
+        }
+
+        /* ========== TASKBAR (VAPORWAVE) ========== */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(180deg, #c0c0c0, #a0a0a0);
+            border-top: 2px solid #fff;
+            display: none;
+            align-items: center;
+            padding: 3px;
+            gap: 3px;
+            z-index: 10000;
+        }
+
+        .vapor-theme .taskbar {
+            display: flex;
+        }
+
+        .start-button {
+            padding: 3px 20px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .start-button::before {
+            content: '🌸';
+            font-size: 16px;
+        }
+
+        .taskbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            border: 2px inset;
+            height: 30px;
+            font-size: 11px;
+        }
+
+        /* ========== DESKTOP ICONS ========== */
+        .desktop-icons {
+            position: absolute;
+            top: 30px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .vapor-theme .desktop-icons {
+            top: 50px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .vapor-theme .desktop-icon:hover {
+            background: rgba(0, 0, 128, 0.3);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .desktop-icon.selected {
+            background: #000;
+            color: #fff;
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 5px;
+            background: #fff;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            overflow: hidden;
+        }
+
+        .vapor-theme .icon-image {
+            background: transparent;
+            border: none;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .icon-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .icon-label {
+            font-size: 10px;
+            word-wrap: break-word;
+            color: #000;
+        }
+
+        .vapor-theme .icon-label {
+            color: white;
+            text-shadow: 1px 1px 2px black, 0 0 10px var(--pink);
+        }
+
+        /* ========== WINDOWS ========== */
+        .window {
+            position: absolute;
+            background: #fff;
+            border: 2px solid #000;
+            min-width: 200px;
+            min-height: 150px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            animation: windowOpen 0.3s ease-out;
+        }
+
+        @keyframes windowOpen {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .vapor-theme .window {
+            border: 2px solid;
+            border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255, 113, 206, 0.3);
+            background: var(--gray);
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window.focused {
+            z-index: 1000;
+        }
+
+        .window-titlebar {
+            background: #fff;
+            border-bottom: 1px solid #000;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            position: relative;
+            touch-action: none;
+            padding: 0 3px;
+        }
+
+        .vapor-theme .window-titlebar {
+            background: linear-gradient(90deg, var(--win95-blue), var(--blue));
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            height: auto;
+            padding: 3px;
+        }
+
+        .window.focused .window-titlebar {
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 1px,
+                #fff 1px,
+                #fff 2px
+            );
+        }
+
+        .vapor-theme .window.focused .window-titlebar {
+            background: linear-gradient(90deg, var(--win95-blue), var(--blue));
+        }
+
+        .window-close {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            cursor: pointer;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .window-close:hover {
+            background: #000;
+        }
+
+        .vapor-theme .window-close {
+            width: 18px;
+            height: 18px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .vapor-theme .window-close::after {
+            content: '×';
+        }
+
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            background: #fff;
+            padding: 10px;
+        }
+
+        .vapor-theme .window-content {
+            background: var(--gray);
+        }
+
+        /* ========== DROPDOWN MENU ========== */
+        .dropdown-menu {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            background: #fff;
+            border: 1px solid #000;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            min-width: 150px;
+            display: none;
+            z-index: 10000;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 5px 20px 5px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 11px;
+        }
+
+        .dropdown-item:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* ========== FILE TREE ========== */
+        .file-tree {
+            background: #fff;
+            border: 2px inset;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .folder {
+            cursor: pointer;
+            padding: 2px;
+            user-select: none;
+        }
+
+        .folder:hover {
+            background: var(--win95-blue);
+            color: white;
+        }
+
+        .folder-content {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .folder.open > .folder-content {
+            display: block;
+        }
+
+        /* ========== GALLERY ========== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery-item {
+            background: #000;
+            border: 3px solid var(--pink);
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-caption {
+            background: rgba(0,0,0,0.8);
+            color: var(--pink);
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* ========== MUSIC PLAYER ========== */
+        .music-player {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .player-button {
+            width: 40px;
+            height: 40px;
+            background: var(--gray);
+            border: 2px solid;
+            border-color: #fff #0a0a0a #0a0a0a #fff;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-button:active {
+            border-color: #0a0a0a #fff #fff #0a0a0a;
+        }
+
+        .track-list {
+            background: #000;
+            border: 2px inset;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            padding: 8px;
+            cursor: pointer;
+            color: var(--yellow);
+            font-size: 11px;
+            border-bottom: 1px solid #333;
+        }
+
+        .track-item:hover {
+            background: var(--win95-blue);
+            color: var(--cyan);
+        }
+
+        .track-item.playing {
+            background: var(--purple);
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* ========== CALCULATOR ========== */
+        .calc-display {
+            background: #d0f0d0;
+            border: 2px inset #888;
+            padding: 10px;
+            text-align: right;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 5px;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 5px;
+        }
+
+        .calc-button {
+            background: #d0d0d0;
+            border: 2px outset #fff;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .calc-button:active {
+            border-style: inset;
+            background: #b0b0b0;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: #d0d0d0;
+            border: 2px solid #000;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 90vw;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 32px;
+            margin-right: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-button {
+            background: #fff;
+            border: 2px outset #fff;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-button:active {
+            border-style: inset;
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 16px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #c0c0c0;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #808080;
+            border: 1px solid #000;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .mode-option {
+                width: 250px;
+                height: 300px;
+            }
+
+            .desktop-icon {
+                width: 60px;
+            }
+
+            .icon-image {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+
+            .window {
+                max-width: 95vw !important;
+                max-height: 80vh !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CRT Overlay -->
+    <div class="crt-overlay"></div>
+
+    <!-- Mode Selector -->
+    <div id="mode-selector">
+        <div class="mode-container">
+            <div class="mode-title">CHOOSE YOUR RETRO EXPERIENCE</div>
+
+            <div class="mode-option" onclick="selectMode('mac')">
+                <div class="mode-icon">💻</div>
+                <h2>MAC CLASSIC</h2>
+                <div class="mode-description">
+                    Experience the classic Macintosh interface from 1984
+                </div>
+            </div>
+
+            <div class="mode-option" onclick="selectMode('vapor')">
+                <div class="mode-icon">🌸</div>
+                <h2>VAPORWAVE 95</h2>
+                <div class="mode-description">
+                    Enter the aesthetic vaporwave dimension
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+        <!-- Menu Bar (Mac Classic) -->
+        <div class="menu-bar">
+            <div class="menu-item" data-menu="apple">
+                <span style="font-size: 16px;">🍎</span>
+                <div class="dropdown-menu" id="apple-menu">
+                    <div class="dropdown-item" onclick="showAbout()">About This Computer</div>
+                    <div class="dropdown-item" onclick="switchMode()">Switch Mode...</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="file">
+                File
+                <div class="dropdown-menu" id="file-menu">
+                    <div class="dropdown-item" onclick="closeActiveWindow()">Close Window</div>
+                </div>
+            </div>
+            <div class="menu-item" data-menu="special">
+                Special
+                <div class="dropdown-menu" id="special-menu">
+                    <div class="dropdown-item" onclick="restart()">Restart</div>
+                </div>
+            </div>
+            <div class="menu-clock" id="menu-clock">12:00 PM</div>
+        </div>
+
+        <!-- Taskbar (Vaporwave 95) -->
+        <div class="taskbar">
+            <div class="start-button" onclick="switchMode()">Vapor Start</div>
+            <div class="taskbar-right">
+                <span style="cursor: pointer;" onclick="openWindow('music-player')" title="Music">🎵</span>
+                <span style="cursor: pointer;" onclick="toggleSound()" title="Volume">🔊</span>
+                <span class="menu-clock" id="taskbar-clock">12:00 PM</span>
+            </div>
+        </div>
+
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" ondblclick="openWindow('my-computer')">
+                <div class="icon-image">💾</div>
+                <div class="icon-label">My Computer</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('gallery')">
+                <div class="icon-image">🖼️</div>
+                <div class="icon-label">Gallery</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('music-player')">
+                <div class="icon-image">🎵</div>
+                <div class="icon-label">Music Player</div>
+            </div>
+            <div class="desktop-icon" ondblclick="openWindow('calculator')">
+                <div class="icon-image">🔢</div>
+                <div class="icon-label">Calculator</div>
+            </div>
+        </div>
+
+        <!-- Windows -->
+        <!-- My Computer Window -->
+        <div class="window" id="my-computer" style="left: 100px; top: 100px; width: 500px; height: 400px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'my-computer')" ontouchstart="startDrag(event, 'my-computer')">
+                <div class="window-close" onclick="closeWindow('my-computer')"></div>
+                <div class="window-title">💾 My Computer</div>
+            </div>
+            <div class="window-content">
+                <div class="file-tree">
+                    <div class="folder" onclick="toggleFolder(this)">
+                        <span>📁 C:\RETRO\</span>
+                        <div class="folder-content">
+                            <div class="folder" onclick="toggleFolder(this)">
+                                <span>📁 SYSTEM\</span>
+                                <div class="folder-content">
+                                    <div>📄 config.sys</div>
+                                    <div>📄 autoexec.bat</div>
+                                </div>
+                            </div>
+                            <div class="folder" onclick="toggleFolder(this)">
+                                <span>📁 MUSIC\</span>
+                                <div class="folder-content">
+                                    <div onclick="selectTrack(0)">🎵 vaporwave.mid</div>
+                                    <div onclick="selectTrack(1)">🎵 synthwave.mid</div>
+                                </div>
+                            </div>
+                            <div>📄 readme.txt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Window -->
+        <div class="window" id="gallery" style="left: 150px; top: 80px; width: 600px; height: 500px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'gallery')" ontouchstart="startDrag(event, 'gallery')">
+                <div class="window-close" onclick="closeWindow('gallery')"></div>
+                <div class="window-title">🎨 Gallery</div>
+            </div>
+            <div class="window-content">
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <img src="vaporwave-640x360.jpg" alt="Vaporwave" onerror="this.parentElement.innerHTML='<div style=\'background:#ff71ce;height:120px;\'></div>'">
+                        <div class="gallery-caption">neon dreams</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="dolphins.gif" alt="Dolphins" onerror="this.parentElement.innerHTML='<div style=\'background:#01cdfe;height:120px;\'></div>'">
+                        <div class="gallery-caption">digital ocean</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Computer_95.webp" alt="Computer" onerror="this.parentElement.innerHTML='<div style=\'background:#b967ff;height:120px;\'></div>'">
+                        <div class="gallery-caption">retro tech</div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="reality.jpg" alt="Reality" onerror="this.parentElement.innerHTML='<div style=\'background:#05ffa1;height:120px;\'></div>'">
+                        <div class="gallery-caption">glitch reality</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Player Window -->
+        <div class="window" id="music-player" style="left: 200px; top: 120px; width: 450px; height: 450px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'music-player')" ontouchstart="startDrag(event, 'music-player')">
+                <div class="window-close" onclick="closeWindow('music-player')"></div>
+                <div class="window-title">🎵 Retro Music Player</div>
+            </div>
+            <div class="window-content">
+                <div class="music-player">
+                    <h3 style="margin-bottom: 15px;">♪ NOW PLAYING ♪</h3>
+                    <div id="now-playing" style="color: var(--pink); margin-bottom: 20px; font-weight: bold;">Select a track...</div>
+                    <div class="player-controls">
+                        <button class="player-button" onclick="musicControl('prev')">⏮</button>
+                        <button class="player-button" id="play-pause-btn" onclick="musicControl('play')">▶</button>
+                        <button class="player-button" onclick="musicControl('stop')">⏹</button>
+                        <button class="player-button" onclick="musicControl('next')">⏭</button>
+                    </div>
+                    <div class="track-list">
+                        <div class="track-item" onclick="selectTrack(0)">🎹 Vaporwave Dreams</div>
+                        <div class="track-item" onclick="selectTrack(1)">🎹 Synthwave Nights</div>
+                        <div class="track-item" onclick="selectTrack(2)">🎹 Retro Beats</div>
+                        <div class="track-item" onclick="selectTrack(3)">🎹 Digital Sunset</div>
+                        <div class="track-item" onclick="selectTrack(4)">🎹 Neon Mall</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <label>Volume: <span id="volume-display">70</span>%</label>
+                        <input type="range" id="volume-slider" min="0" max="100" value="70" onchange="changeVolume(this.value)" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Window -->
+        <div class="window" id="calculator" style="left: 250px; top: 150px; width: 240px; height: 320px;">
+            <div class="window-titlebar" onmousedown="startDrag(event, 'calculator')" ontouchstart="startDrag(event, 'calculator')">
+                <div class="window-close" onclick="closeWindow('calculator')"></div>
+                <div class="window-title">🔢 Calculator</div>
+            </div>
+            <div class="window-content" style="padding: 5px;">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-buttons">
+                    <button class="calc-button" onclick="calcInput('7')">7</button>
+                    <button class="calc-button" onclick="calcInput('8')">8</button>
+                    <button class="calc-button" onclick="calcInput('9')">9</button>
+                    <button class="calc-button" onclick="calcInput('÷')">÷</button>
+                    <button class="calc-button" onclick="calcInput('4')">4</button>
+                    <button class="calc-button" onclick="calcInput('5')">5</button>
+                    <button class="calc-button" onclick="calcInput('6')">6</button>
+                    <button class="calc-button" onclick="calcInput('×')">×</button>
+                    <button class="calc-button" onclick="calcInput('1')">1</button>
+                    <button class="calc-button" onclick="calcInput('2')">2</button>
+                    <button class="calc-button" onclick="calcInput('3')">3</button>
+                    <button class="calc-button" onclick="calcInput('-')">−</button>
+                    <button class="calc-button" onclick="calcInput('0')">0</button>
+                    <button class="calc-button" onclick="calcInput('.')">.</button>
+                    <button class="calc-button" onclick="calcEquals()">=</button>
+                    <button class="calc-button" onclick="calcInput('+')">+</button>
+                    <button class="calc-button" onclick="calcClear()" style="grid-column: span 4;">C</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-icon" id="modal-icon">ℹ️</div>
+                <div id="modal-text">Message</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== AUDIO SYSTEM ==========
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let masterVolume = 0.7;
+        let soundEnabled = true;
+        let currentMode = 'vapor';
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'startup':
+                    [523.25, 659.25, 783.99].forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2 * masterVolume, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.5);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.5);
+                    });
+                    return;
+                case 'click':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.1 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.05);
+                    break;
+                case 'open':
+                    oscillator.frequency.value = 400;
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.2 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'close':
+                    oscillator.frequency.value = 800;
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.12);
+                    gainNode.gain.setValueAtTime(0.15 * masterVolume, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.12);
+                    break;
+            }
+        }
+
+        // Music Player
+        let currentTrack = -1;
+        let isPlaying = false;
+        let musicInterval = null;
+
+        const melodies = [
+            [{ freq: 261.63, dur: 0.4 }, { freq: 329.63, dur: 0.4 }, { freq: 392.00, dur: 0.4 }],
+            [{ freq: 440.00, dur: 0.3 }, { freq: 493.88, dur: 0.3 }, { freq: 523.25, dur: 0.3 }],
+            [{ freq: 392.00, dur: 0.25 }, { freq: 440.00, dur: 0.25 }, { freq: 493.88, dur: 0.25 }],
+            [{ freq: 523.25, dur: 0.35 }, { freq: 493.88, dur: 0.35 }, { freq: 440.00, dur: 0.35 }],
+            [{ freq: 659.25, dur: 0.3 }, { freq: 587.33, dur: 0.3 }, { freq: 523.25, dur: 0.3 }]
+        ];
+
+        const trackNames = ['Vaporwave Dreams', 'Synthwave Nights', 'Retro Beats', 'Digital Sunset', 'Neon Mall'];
+
+        function playMelody() {
+            if (currentTrack < 0 || currentTrack >= melodies.length) return;
+            const melody = melodies[currentTrack];
+            let time = audioContext.currentTime;
+
+            melody.forEach(note => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.frequency.value = note.freq;
+                gain.gain.setValueAtTime(0.2 * masterVolume, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + note.dur);
+                osc.start(time);
+                osc.stop(time + note.dur);
+                time += note.dur;
+            });
+        }
+
+        function selectTrack(index) {
+            document.querySelectorAll('.track-item').forEach((item, i) => {
+                item.classList.toggle('playing', i === index);
+            });
+            currentTrack = index;
+            document.getElementById('now-playing').textContent = trackNames[index];
+            playSound('click');
+        }
+
+        function musicControl(action) {
+            playSound('click');
+
+            switch(action) {
+                case 'play':
+                    if (currentTrack < 0) selectTrack(0);
+                    if (!isPlaying) {
+                        isPlaying = true;
+                        document.getElementById('play-pause-btn').textContent = '⏸';
+                        playMelody();
+                        musicInterval = setInterval(() => { if (isPlaying) playMelody(); }, 2500);
+                    } else {
+                        isPlaying = false;
+                        document.getElementById('play-pause-btn').textContent = '▶';
+                        clearInterval(musicInterval);
+                    }
+                    break;
+                case 'stop':
+                    isPlaying = false;
+                    document.getElementById('play-pause-btn').textContent = '▶';
+                    clearInterval(musicInterval);
+                    break;
+                case 'next':
+                    if (currentTrack < trackNames.length - 1) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack + 1);
+                        if (wasPlaying) setTimeout(() => musicControl('play'), 100);
+                    }
+                    break;
+                case 'prev':
+                    if (currentTrack > 0) {
+                        const wasPlaying = isPlaying;
+                        if (isPlaying) musicControl('stop');
+                        selectTrack(currentTrack - 1);
+                        if (wasPlaying) setTimeout(() => musicControl('play'), 100);
+                    }
+                    break;
+            }
+        }
+
+        function changeVolume(value) {
+            masterVolume = value / 100;
+            document.getElementById('volume-display').textContent = value;
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            playSound('click');
+            showAlert(soundEnabled ? '🔊 Sound ON' : '🔇 Sound OFF', 'ℹ️');
+        }
+
+        // ========== CALCULATOR ==========
+        let calcValue = '0';
+        let calcOperator = null;
+        let calcPrevValue = null;
+        let calcNewNumber = true;
+
+        function calcInput(value) {
+            playSound('click');
+            if (['+', '-', '×', '÷'].includes(value)) {
+                if (calcPrevValue !== null && !calcNewNumber) calcEquals();
+                calcOperator = value;
+                calcPrevValue = parseFloat(calcValue);
+                calcNewNumber = true;
+            } else if (value === '.') {
+                if (!calcValue.includes('.')) calcValue += '.';
+            } else {
+                if (calcNewNumber) {
+                    calcValue = value;
+                    calcNewNumber = false;
+                } else {
+                    calcValue = calcValue === '0' ? value : calcValue + value;
+                }
+            }
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        function calcEquals() {
+            playSound('click');
+            if (calcOperator && calcPrevValue !== null) {
+                const current = parseFloat(calcValue);
+                let result = 0;
+                switch(calcOperator) {
+                    case '+': result = calcPrevValue + current; break;
+                    case '-': result = calcPrevValue - current; break;
+                    case '×': result = calcPrevValue * current; break;
+                    case '÷': result = current !== 0 ? calcPrevValue / current : 0; break;
+                }
+                calcValue = result.toString();
+                document.getElementById('calc-display').textContent = calcValue;
+                calcOperator = null;
+                calcPrevValue = null;
+                calcNewNumber = true;
+            }
+        }
+
+        function calcClear() {
+            playSound('click');
+            calcValue = '0';
+            calcOperator = null;
+            calcPrevValue = null;
+            calcNewNumber = true;
+            document.getElementById('calc-display').textContent = calcValue;
+        }
+
+        // ========== WINDOW MANAGEMENT ==========
+        let zIndexCounter = 100;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function openWindow(windowId) {
+            playSound('open');
+            const win = document.getElementById(windowId);
+            win.classList.add('active');
+            focusWindow(windowId);
+        }
+
+        function closeWindow(windowId) {
+            playSound('close');
+            document.getElementById(windowId).classList.remove('active', 'focused');
+            if (windowId === 'music-player' && isPlaying) musicControl('stop');
+        }
+
+        function closeActiveWindow() {
+            const activeWin = document.querySelector('.window.focused');
+            if (activeWin) closeWindow(activeWin.id);
+        }
+
+        function focusWindow(windowId) {
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('focused'));
+            const win = document.getElementById(windowId);
+            win.classList.add('focused');
+            win.style.zIndex = ++zIndexCounter;
+        }
+
+        document.querySelectorAll('.window').forEach(win => {
+            win.addEventListener('mousedown', () => focusWindow(win.id));
+            win.addEventListener('touchstart', () => focusWindow(win.id));
+        });
+
+        function startDrag(e, windowId) {
+            e.preventDefault();
+            if (e.target.classList.contains('window-close')) return;
+
+            draggedWindow = document.getElementById(windowId);
+            focusWindow(windowId);
+
+            const rect = draggedWindow.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function drag(e) {
+            if (!draggedWindow) return;
+            e.preventDefault();
+
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            let newX = clientX - dragOffset.x;
+            let newY = clientY - dragOffset.y;
+
+            newX = Math.max(0, Math.min(newX, window.innerWidth - draggedWindow.offsetWidth));
+            newY = Math.max(24, Math.min(newY, window.innerHeight - 40));
+
+            draggedWindow.style.left = newX + 'px';
+            draggedWindow.style.top = newY + 'px';
+        }
+
+        function stopDrag() {
+            draggedWindow = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        // ========== MODE MANAGEMENT ==========
+        function selectMode(mode) {
+            playSound('startup');
+            currentMode = mode;
+
+            const desktop = document.getElementById('desktop');
+            desktop.className = '';
+
+            if (mode === 'mac') {
+                desktop.classList.add('mac-theme');
+            } else {
+                desktop.classList.add('vapor-theme');
+            }
+
+            document.getElementById('mode-selector').classList.add('hidden');
+            desktop.classList.add('active');
+
+            updateClock();
+        }
+
+        function switchMode() {
+            playSound('click');
+            document.getElementById('desktop').classList.remove('active');
+            document.getElementById('mode-selector').classList.remove('hidden');
+        }
+
+        // ========== UI HELPERS ==========
+        function toggleFolder(element) {
+            playSound('click');
+            element.classList.toggle('open');
+        }
+
+        function showAbout() {
+            playSound('click');
+            showAlert('RETRO COMPUTER AI\n\nUltimate Vintage OS Experience\n\nMac Classic & Vaporwave 95', 'ℹ️');
+        }
+
+        function showAlert(message, icon = '⚠️') {
+            document.getElementById('modal-icon').textContent = icon;
+            document.getElementById('modal-text').textContent = message;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function restart() {
+            playSound('click');
+            location.reload();
+        }
+
+        // ========== MENU SYSTEM ==========
+        let activeMenu = null;
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                playSound('click');
+                const menuId = item.dataset.menu;
+                const dropdown = document.getElementById(menuId + '-menu');
+
+                if (activeMenu && activeMenu !== dropdown) {
+                    activeMenu.classList.remove('active');
+                    activeMenu.parentElement.classList.remove('active');
+                }
+
+                if (dropdown) {
+                    const isActive = dropdown.classList.toggle('active');
+                    item.classList.toggle('active', isActive);
+                    activeMenu = isActive ? dropdown : null;
+                }
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-item') && !e.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu, .menu-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                activeMenu = null;
+            }
+        });
+
+        // ========== CLOCK ==========
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            const timeString = `${displayHours}:${minutes} ${ampm}`;
+
+            const menuClock = document.getElementById('menu-clock');
+            const taskbarClock = document.getElementById('taskbar-clock');
+            if (menuClock) menuClock.textContent = timeString;
+            if (taskbarClock) taskbarClock.textContent = timeString;
+        }
+
+        // ========== DESKTOP ICONS ==========
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                if (e.detail === 1) {
+                    playSound('click');
+                    document.querySelectorAll('.desktop-icon').forEach(i => i.classList.remove('selected'));
+                    icon.classList.add('selected');
+                }
+            });
+        });
+
+        // ========== INITIALIZATION ==========
+        setInterval(updateClock, 1000);
+
+        document.addEventListener('selectstart', (e) => {
+            if (draggedWindow) e.preventDefault();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeActiveWindow();
+        });
+    </script>
+</body>
+</html>
